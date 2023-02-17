@@ -1,0 +1,35 @@
+<!-- The Lappa robot -->
+<mujoco model="Lappa">
+	<worldbody>
+		<body name="root" pos="0 -.3 0">
+			<joint name="root_a" type="free" damping="0" armature="0" pos="0 0 0" />
+			<geom name="core" type="cylinder" fromto="0 -.2 0 0 .2 0" size=".02" mass=".001" />
+            <site name="rot_a" pos="0 -.2 -.05" />
+            <site name="rot_b" pos="0 .2 -.05" />
+            <body name="module_a" pos="0 -.4 0">
+                <geom name="housing_a" type="cylinder" fromto="0 0 -.025 0 0 0" size=".15" rgba="1 0 0 1" mass=".05" />
+                <joint type="hinge" name="joint_a" axis="1 0 0" pos="0 .25 0" limited="true" range="-90 45" />
+                <body name="chamber_a">
+                    <geom name="chamber_a" type="cylinder" fromto="0 0 0 0 0 -.1" size=".05" rgba="0 0 1 1" mass=".05" />
+                    <site name="propeller_a" pos="0 0 -.05" />
+                </body>
+            </body>
+            <body name="module_b" pos="0 .4 0">
+                <geom name="housing_b" type="cylinder" fromto="0 0 -.025 0 0 0" size=".15" rgba="1 0 0 1" mass=".05" />
+                <joint type="hinge" name="joint_b" axis="1 0 0" pos="0 -.25 0" limited="true" range="-45 90" />
+                <body name="chamber_b">
+                    <geom name="chamber_b" type="cylinder" fromto="0 0 0 0 0 -.1" size=".05" rgba="0 0 1 1" mass=".05" />
+                    <site name="propeller_b" pos="0 0 -.05" />
+                </body>
+            </body>
+		</body>
+	</worldbody>
+	<equality>
+	</equality>
+	<actuator>
+        <motor name="a_propeller" site="propeller_a" ctrllimited="true" ctrlrange="-1. 1." gear="0  0. 3. 0. 0. 0."  />
+        <motor name="b_propeller" site="propeller_b" ctrllimited="true" ctrlrange="-1. 1." gear="0  0. 3. 0. 0. 0."  />
+        <velocity name="a_rotate" site="rot_a" ctrllimited="true" ctrlrange="-1 1" gear="0 0 0 0 0 1" kv="1" />
+        <velocity name="b_rotate" site="rot_b" ctrllimited="true" ctrlrange="-1 1" gear="0 0 0 0 0 1" kv="1" />
+	</actuator>
+</mujoco>

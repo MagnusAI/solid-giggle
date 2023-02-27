@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 xml_path = '../model/lappa.xml'
-simend = 50
+simend = float('inf')
 
 # For callback functions
 button_left = False
@@ -97,7 +97,7 @@ opt = mj.MjvOption()                        # visualization options
 
 # Init GLFW, create window, make OpenGL context current, request v-sync
 glfw.init()
-window = glfw.create_window(1200, 900, "Demo", None, None)
+window = glfw.create_window(1200, 900, "Lappa", None, None)
 glfw.make_context_current(window)
 glfw.swap_interval(1)
 

@@ -13,7 +13,7 @@
                 <site name="a_pressure" pos=".01 0 -.1" euler="180 0 0" rgba="1 0 0 1" />
                 <site name="a_accelerometer" />
                 <body name="a_chamber">
-                    <joint type="hinge" name="a_h1" axis="0 0 1" limited="true" range="-180 180" />
+                    <joint type="hinge" name="a_h1" axis="0 0 1" />
                     <geom name="a_chamber1" type="cylinder" fromto="0 0 .01 0 0 -.051" size=".083" rgba="0 0 1 1" mass=".002" />
                     <geom name="a_chamber2" type="cylinder" fromto="0 0 -.05 0 0 -.1" size=".12" rgba="0 0 1 1" mass=".075" />
                     <site name="a_propeller" pos="0 0 -.05" />
@@ -28,7 +28,7 @@
                 <site name="b_rangefinder_down" pos="0 0 -.12" euler="180 0 0" rgba="0 1 0 1" />
                 <site name="b_pressure" pos=".01 0 -.1" euler="180 0 0" rgba="1 0 0 1" />
                 <body name="b_chamber">
-                    <joint type="hinge" name="b_h1" axis="0 0 1" limited="true" range="-180 180" />
+                    <joint type="hinge" name="b_h1" axis="0 0 1" />
                     <geom name="b_chamber1" type="cylinder" fromto="0 0 .01 0 0 -.051" size=".083" rgba="0 1 1 1" mass=".002" />
                     <geom name="b_chamber2" type="cylinder" fromto="0 0 -.05 0 0 -.1" size=".12" rgba="0 1 1 1" mass=".075" />
                     <site name="b_propeller" pos="0 0 -.05" />
@@ -59,7 +59,7 @@
 	<actuator>
         <motor name="a_thrust" site="a_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 10"  />
         <motor name="b_thrust" site="b_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 10"  />
-        <motor name="a_rotor" joint="a_h1" gear=".2"  />
-        <motor name="b_rotor" joint="b_h1" gear=".2"  />
+        <motor name="a_rotor" joint="a_h1" gear=".5"  />
+        <motor name="b_rotor" joint="b_h1" gear=".5"  />
 	</actuator>
 </mujoco>

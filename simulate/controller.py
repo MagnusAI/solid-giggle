@@ -112,13 +112,13 @@ def is_angle(actual_angle, target_angle):
     return actual_angle < target_angle + allowedOffset and actual_angle > target_angle - allowedOffset
 
 
-def set_angle(module, current_angle, target_angle):
+def set_angle(module, current_angle, target_angle, ctrl = .7):
     if (is_angle(current_angle, target_angle)):
         return
     if (current_angle > target_angle):
-        set_rotate(module, -.7)
+        set_rotate(module, -ctrl)
     elif (current_angle < target_angle - 1):
-        set_rotate(module, .7)
+        set_rotate(module, ctrl)
     else:
         set_rotate(module, 0)
 
@@ -127,11 +127,11 @@ def walk_straight(sensors):
     if (WALKSTEP == 0):
         set_thrust("a", -1)
         set_thrust("b", 0)
-        if (is_angle(deg(sensors[0]), -45)):
+        if (is_angle(deg(sensors[0]), 45)):
             set_rotate("a", 0)
             WALKSTEP = 1
         else:
-            set_angle("a", sensors[0], -45)
+            set_angle("a", sensors[0], 45)
     elif (WALKSTEP == 1):
         set_thrust("a", 0)
         set_thrust("b", -1)
@@ -149,12 +149,12 @@ def prepare_transition(module, sensor):
     if (not is_obstructed(module)):
         set_thrust(counter_module, -1)
         set_thrust(module, 0)
-        set_rotate(counter_module, -.7)
+        set_rotate(counter_module, .7)
     else:
         if(sensor < 0.14):
             set_thrust(counter_module, -1)
             set_thrust(module, 0)
-            set_rotate(counter_module, .7)
+            set_rotate(counter_module, -.7)
         else:
             set_rotate(counter_module, 0)
             set_thrust(module, -1)
@@ -178,7 +178,7 @@ def transition_wall(module, sensor, counter_sensor):
         set_thrust(counter_module, -1)
         if (deg(counter_sensor) < 90):
             set_thrust(module, .1)
-            set_angle(counter_module, counter_sensor, 90)
+            set_angle(counter_module, counter_sensor, 90, .1)
         else:
             set_thrust(module, -1)
             set_rotate(counter_module, 0)
@@ -190,25 +190,26 @@ def controller(model, data):
     STATE = data
     sensors = get_sensor_values()
 
-    if (is_grounded("a") and is_grounded("b")):
-        RULESTEP = 1
+    if (is_grounded("a") and is_grounded("b") and RULESTEP == 0):
+        RULESTEP = 3
     
     if (RULESTEP == 1):
-        walk_straight(sensors)
         if (is_obstructed("a") or is_obstructed("b")):
             print("Obstructed", is_obstructed("a"), is_obstructed("b"))
-            print(sensors[6], sensors[7])
+            WALKSTEP = 0
             RULESTEP = 2
-    else:
-        WALKSTEP = 0
+        else:
+            walk_straight(sensors)
 
     if (RULESTEP == 2):
+        print("Preparing transition")
         set_rotate("a", 0)
         set_rotate("b", 0)
         if (is_prepared(sensors[6])):
             if (is_prepared(sensors[7])):
                 set_thrust("b", -1)
                 RULESTEP = 3
+                print("Finished preparing")
             else:
                 prepare_transition("b", sensors[7])
         else:
@@ -217,5 +218,5 @@ def controller(model, data):
     if (RULESTEP == 3):
         transition_wall("b", sensors[9], sensors[0])
     
-
+    
     pass

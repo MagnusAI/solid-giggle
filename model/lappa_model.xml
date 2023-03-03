@@ -2,16 +2,25 @@
 <mujoco model="Lappa">
 	<worldbody>
 		<body name="root" pos="0 0 0">
-			<joint name="root_a" type="free" stiffness="0.01" />
-			<geom name="core" type="cylinder" fromto="-.075 0 -.01 .075 0 -.01" size=".015" mass=".001" />
+			<joint name="root" type="free" />
+			<geom name="core" type="cylinder" fromto="-.075 0 -.01 .075 0 -.01" size=".01" mass=".0001" />
+            <body name="arm" pos="0 0 -.01">
+                <geom name="arm" type="cylinder" fromto="-.075 0 0 .075 0 0" size=".015" rgba="1 1 0 1" mass=".001" />
+                <body name="a_connect" pos="-.075 0 0" >
+                    <geom name="a_box" type="box" size=".01 .01 .01" mass=".001" />
+                </body>
+                <body name="b_connect" pos=".075 0 0">
+                    <geom name="b_box" type="box" size=".01 .01 .01" mass=".001" />
+                </body>
+            </body>
             <body name="a_module" pos="-.225 0 0">
                 <geom name="a_house" type="cylinder" fromto="0 0 -.025 0 0 0" size=".15" rgba="1 0 0 1" mass=".002" />
-                <joint type="hinge" name="a_h2" axis="0 1 0" pos=".15 0 0" limited="true" range="-90 90" stiffness=".005" />
-                <joint type="hinge" name="a_h3" axis="1 0 0" pos=".2 0 0" limited="true" range="-90 90" stiffness=".05" />
-                <site name="a_rangefinder_forward" pos="0 .151 0" euler="-90 0 0" rgba="0 1 0 1" />
+                <joint type="hinge" name="a_h2" axis="0 1 0" pos=".15 0 0" limited="true" range="-90 90" />
+                <joint type="hinge" name="a_h3" axis="1 0 0" pos=".15 0 0" limited="true" range="-90 90" stiffness=".5" />
+                <site name="a_rangefinder_forward" pos="0 .155 0" euler="-90 0 0" rgba="0 1 0 1" />
                 <site name="a_rangefinder_down" pos="0 0 -.12" euler="180 0 0" rgba="0 1 0 1" />
                 <site name="a_pressure" pos=".01 0 -.1" euler="180 0 0" rgba="1 0 0 1" />
-                <site name="a_accelerometer" />
+                <site name="a_gyro" />
                 <body name="a_chamber">
                     <joint type="hinge" name="a_h1" axis="0 0 1" />
                     <geom name="a_chamber1" type="cylinder" fromto="0 0 .01 0 0 -.051" size=".083" rgba="0 0 1 1" mass=".002" />
@@ -21,10 +30,10 @@
             </body>
             <body name="b_module" pos=".225 0 0">
                 <geom name="b_housing" type="cylinder" fromto="0 0 -.025 0 0 0" size=".15" rgba="1 .4 .7 1" mass=".002" />
-                <site name="b_accelerometer" rgba="1 0 0 1" pos="-.1 0 .01" />
-                <joint type="hinge" name="b_h2" axis="0 1 0" pos="-.15 0 0" limited="true" range="-90 90" stiffness=".005" />
-                <joint type="hinge" name="b_h3" axis="1 0 0" pos="-.25 0 0" limited="true" range="-90 90" stiffness=".075" />
-                <site name="b_rangefinder_forward" pos="0 .151 0" euler="-90 0 0" rgba="0 1 0 1" />
+                <site name="b_gyro" rgba="1 0 0 1" pos="-.1 0 .01" />
+                <joint type="hinge" name="b_h2" axis="0 1 0" pos="-.15 0 0" limited="true" range="-90 90" />
+                <joint type="hinge" name="b_h3" axis="1 0 0" pos="-.15 0 0" limited="true" range="-90 90" stiffness=".5" />
+                <site name="b_rangefinder_forward" pos="0 .155 0" euler="-90 0 0" rgba="0 1 0 1" />
                 <site name="b_rangefinder_down" pos="0 0 -.12" euler="180 0 0" rgba="0 1 0 1" />
                 <site name="b_pressure" pos=".01 0 -.1" euler="180 0 0" rgba="1 0 0 1" />
                 <body name="b_chamber">
@@ -37,8 +46,8 @@
 		</body>
 	</worldbody>
     <sensor>
-        <accelerometer name="a_accelerometer" site="a_accelerometer" />
-        <gyro name="b_accelerometer" site="b_accelerometer" />
+        <gyro name="a_gyro" site="a_gyro" />
+        <gyro name="b_gyro" site="b_gyro" />
         <rangefinder name="a_rangefinder_forward" site="a_rangefinder_forward" />
         <rangefinder name="a_rangefinder_down" site="a_rangefinder_down" />
         <rangefinder name="b_rangefinder_forward" site="b_rangefinder_forward" />
@@ -53,13 +62,13 @@
         <force name="b_pressure" site="b_pressure" />
     </sensor>
 	<equality>
-        <joint joint1="a_h1" joint2="b_h3" />
-        <joint joint1="b_h1" joint2="a_h3" />
+        <connect body1="a_connect" body2="a_module" anchor="0 0 0" />
+        <connect body1="b_connect" body2="b_module" anchor="0 0 0" />
 	</equality>
 	<actuator>
         <motor name="a_thrust" site="a_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 10"  />
         <motor name="b_thrust" site="b_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 10"  />
-        <motor name="a_rotor" joint="a_h1" gear=".5"  />
+        <motor name="a_rotor" joint="a_h1" gear="-.5" />
         <motor name="b_rotor" joint="b_h1" gear=".5"  />
 	</actuator>
 </mujoco>

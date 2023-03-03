@@ -5,12 +5,14 @@ from math import degrees
 import os
 
 STATE = None
+RULESTEP = 0
 WALKSTEP = 0
+TRANSITION_STEP = 0
 
 # SENSOR THRESHOLDS
-GROUND_THRESHOLD = 0.01
+FIXABLE_THRESHOLD = 0.01
+SURFACE_THRESHOLD = 0.5
 OBSTACLE_THRESHOLD = 0.15
-
 
 def deg(scalar):
     return round(degrees(scalar), 2)
@@ -18,7 +20,7 @@ def deg(scalar):
 
 def get_sensor_values():
     global STATE
-    sensors = [STATE.sensor('a_h1').data,
+    sensors = [STATE.sensor('a_h1').data * -1,
                STATE.sensor('b_h1').data,
                STATE.sensor('a_h2').data,
                STATE.sensor('b_h2').data,
@@ -33,11 +35,11 @@ def get_sensor_values():
 
 
 def is_grounded(module):
-    global STATE, GROUND_THRESHOLD
+    global STATE, FIXABLE_THRESHOLD
     if (module == "a"):
-        return STATE.sensor("a_rangefinder_down").data < GROUND_THRESHOLD
+        return STATE.sensor("a_rangefinder_down").data < FIXABLE_THRESHOLD
     elif (module == "b"):
-        return STATE.sensor("b_rangefinder_down").data < GROUND_THRESHOLD
+        return STATE.sensor("b_rangefinder_down").data < FIXABLE_THRESHOLD
     else:
         print(is_grounded.__name__ + ": Invalid module name")
 
@@ -71,9 +73,17 @@ def set_rotate(module, ctrl):
 def is_obstructed(module):
     global STATE, OBSTACLE_THRESHOLD
     if (module == "a"):
-        return STATE.sensor("a_rangefinder_forward").data < OBSTACLE_THRESHOLD
+        distance = STATE.sensor("a_rangefinder_forward").data
+        if (distance < 0):
+            return False
+        else:
+            return distance < OBSTACLE_THRESHOLD
     elif (module == "b"):
-        return STATE.sensor("b_rangefinder_forward").data < OBSTACLE_THRESHOLD
+        distance = STATE.sensor("b_rangefinder_forward").data
+        if (distance < 0):
+            return False
+        else:
+            return distance < OBSTACLE_THRESHOLD
     else:
         print(is_obstructed.__name__ + ": Invalid module name")
 
@@ -120,7 +130,6 @@ def walk_straight(sensors):
         if (is_angle(deg(sensors[0]), -45)):
             set_rotate("a", 0)
             WALKSTEP = 1
-            print_sensors()
         else:
             set_angle("a", sensors[0], -45)
     elif (WALKSTEP == 1):
@@ -128,7 +137,6 @@ def walk_straight(sensors):
         set_thrust("b", -1)
         if (is_angle(deg(sensors[1]), 45)):
             set_rotate("b", 0)
-            print_sensors()
             WALKSTEP = 0
         else:
             set_angle("b", sensors[1], 45)
@@ -136,15 +144,78 @@ def walk_straight(sensors):
         set_thrust("a", -1)
         set_thrust("b", -1)
 
+def prepare_transition(module, sensor):
+    counter_module = "a" if module == "b" else "b"
+    if (not is_obstructed(module)):
+        set_thrust(counter_module, -1)
+        set_thrust(module, 0)
+        set_rotate(counter_module, -.7)
+    else:
+        if(sensor < 0.14):
+            set_thrust(counter_module, -1)
+            set_thrust(module, 0)
+            set_rotate(counter_module, .7)
+        else:
+            set_rotate(counter_module, 0)
+            set_thrust(module, -1)
+
+def is_prepared(sensor):
+    return sensor < 0.16 and sensor > 0.14
+
+def detect_surface(sensor):
+    return sensor <= SURFACE_THRESHOLD
+
+def transition_wall(module, sensor, counter_sensor):
+    global TRANSITION_STEP
+    counter_module = "a" if module == "b" else "b"
+    if (TRANSITION_STEP == 0):
+        set_thrust(counter_module, -1)
+        set_thrust(module, .1)
+        if (not detect_surface(sensor)):
+            TRANSITION_STEP = 1
+    if (TRANSITION_STEP == 1):
+        set_thrust(module, 0)
+        set_thrust(counter_module, -1)
+        if (deg(counter_sensor) < 90):
+            set_thrust(module, .1)
+            set_angle(counter_module, counter_sensor, 90)
+        else:
+            set_thrust(module, -1)
+            set_rotate(counter_module, 0)
+            TRANSITION_STEP = 2
+
 
 def controller(model, data):
-    global STATE, WALKSTEP
+    global STATE, RULESTEP, WALKSTEP, TRANSITION_STEP
     STATE = data
     sensors = get_sensor_values()
 
     if (is_grounded("a") and is_grounded("b")):
+        RULESTEP = 1
+    
+    if (RULESTEP == 1):
         walk_straight(sensors)
+        if (is_obstructed("a") or is_obstructed("b")):
+            print("Obstructed", is_obstructed("a"), is_obstructed("b"))
+            print(sensors[6], sensors[7])
+            RULESTEP = 2
+    else:
+        WALKSTEP = 0
 
-        #print("WALKStep: ", WALKSTEP)
+    if (RULESTEP == 2):
+        set_rotate("a", 0)
+        set_rotate("b", 0)
+        if (is_prepared(sensors[6])):
+            if (is_prepared(sensors[7])):
+                set_thrust("b", -1)
+                RULESTEP = 3
+            else:
+                prepare_transition("b", sensors[7])
+        else:
+            prepare_transition("a", sensors[6])
+
+    if (RULESTEP == 3):
+        transition_wall("b", sensors[9], sensors[0])
+    
 
     pass

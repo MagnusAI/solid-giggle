@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from controller import controller
+from controller_v2 import controller
 import numpy as np
 import os
 

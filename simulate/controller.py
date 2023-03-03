@@ -18,7 +18,8 @@ def deg(scalar):
     return round(degrees(scalar), 2)
 
 
-def get_sensor_values():
+
+def get_sensor_values(module = None):
     global STATE
     sensors = [STATE.sensor('a_h1').data * -1,
                STATE.sensor('b_h1').data,
@@ -165,7 +166,7 @@ def is_prepared(sensor):
 def detect_surface(sensor):
     return sensor <= SURFACE_THRESHOLD
 
-def transition_wall(module, sensor, counter_sensor):
+def transition_wall(module, sensor, h1, counter_h1):
     global TRANSITION_STEP
     counter_module = "a" if module == "b" else "b"
     if (TRANSITION_STEP == 0):
@@ -173,16 +174,35 @@ def transition_wall(module, sensor, counter_sensor):
         set_thrust(module, .1)
         if (not detect_surface(sensor)):
             TRANSITION_STEP = 1
+            print("Transitioning step 0 complete...")
     if (TRANSITION_STEP == 1):
         set_thrust(module, 0)
         set_thrust(counter_module, -1)
-        if (deg(counter_sensor) < 90):
+        if (deg(counter_h1) < 90):
             set_thrust(module, .1)
-            set_angle(counter_module, counter_sensor, 90, .1)
+            set_angle(counter_module, deg(counter_h1), 90, .1)
         else:
             set_thrust(module, -1)
             set_rotate(counter_module, 0)
             TRANSITION_STEP = 2
+            print("Transitioning step 1 complete...")
+    if (TRANSITION_STEP == 2):
+        set_rotate(counter_module, 0)
+        set_rotate(module, 0)
+        set_thrust(module, -1)
+        set_thrust(counter_module, 0)
+        if (deg(h1) < 90):
+            print(deg(h1))
+            set_thrust(counter_module, .1)
+            set_angle(module, deg(h1), 90, .2)
+        else:
+            set_thrust(counter_module, -1)
+            set_rotate(module, 0)
+            TRANSITION_STEP = 3
+            print("Transitioning step 2 complete...")
+    if (TRANSITION_STEP == 3):
+        print("Done.")
+
 
 
 def controller(model, data):
@@ -191,7 +211,7 @@ def controller(model, data):
     sensors = get_sensor_values()
 
     if (is_grounded("a") and is_grounded("b") and RULESTEP == 0):
-        RULESTEP = 3
+        RULESTEP = 1
     
     if (RULESTEP == 1):
         if (is_obstructed("a") or is_obstructed("b")):
@@ -216,7 +236,7 @@ def controller(model, data):
             prepare_transition("a", sensors[6])
 
     if (RULESTEP == 3):
-        transition_wall("b", sensors[9], sensors[0])
+        transition_wall("b", sensors[9], sensors[1], sensors[0])
     
-    
+
     pass

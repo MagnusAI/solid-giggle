@@ -16,17 +16,22 @@ class CoreApi:
             return [data[0] * -1]
         else:        
             return data
-    
+        
+    def get_actuator(self, actuator):
+        return self.state.actuator(actuator).ctrl
+
+    def set_actuator(self, actuator, ctrl):
+        self.state.actuator(actuator).ctrl = ctrl
+
     def read_sensors(self, sensor_names):
         sensors = map(self.get_sensor, sensor_names)
         return [round(item, 4) for sublist in sensors for item in sublist]
 
-    def set_actuator(self, actuator, ctrl):
-        self.state.actuator(actuator).ctrl = ctrl
-    
-    def read_actuator(self, actuator):
-        return self.state.actuator(actuator).ctrl
+    def read_actuators(self, actuator_names):
+        actuators = map(self.get_actuator, actuator_names)
+        return [round(item[0], 4) for item in actuators]
 
+    
 
 class LappaApi:
     def __init__(self, state, FIXABLE_THRESHOLD = 0.01, OBSTACLE_THRESHOLD = 0.15):
@@ -44,6 +49,11 @@ class LappaApi:
         sensors = ["h1", "h2", "h3", "rangefinder_forward", "rangefinder_down"]
         sensor_names = [module + "_" + sensor for sensor in sensors]
         return self.core.read_sensors(sensor_names)
+    
+    def get_actuator_values(self, module):
+        actuators = ["thrust", "rotor"]
+        actuator_names = [module + "_" + actuator for actuator in actuators]
+        return self.core.read_actuators(actuator_names)
 
     def is_fixable(self, module):
         sensor_data = self.core.read_sensors([module + "_rangefinder_down"])[0]
@@ -112,7 +122,7 @@ class LappaApi:
 
     def is_obstructed(self, module):
         sensor_data = self.core.read_sensors([module + "_rangefinder_forward"])[0]
-        return sensor_data <= self.OBSTACLE_THRESHOLD
+        return sensor_data < self.OBSTACLE_THRESHOLD
     
     def transition_wall(self, module, ctrl = .7):
         if (self.TRANSITION_WALLSTEP == 0):
@@ -121,9 +131,9 @@ class LappaApi:
                 self.release_module("a")
                 self.rotate_module("b", -.7)
             else:
+                self.fix_module("a")
                 self.rotate_module("b", 0)
                 self.TRANSITION_WALLSTEP = 1
-                print("Done with step 0")
         elif (self.TRANSITION_WALLSTEP == 1):
             if (self.is_obstructed("b")):
                 self.fix_module("a")
@@ -131,7 +141,6 @@ class LappaApi:
                 self.rotate_module("a", -.7)
             else:
                 self.rotate_module("a", 0)
-                print("Done with step 1")
 
 
     

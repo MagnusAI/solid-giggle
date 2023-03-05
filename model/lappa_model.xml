@@ -18,8 +18,8 @@
                 <geom name="a_motor_sim" type="box" size=".01 .01 .01" pos=".13 0 -.035" mass=".0005" />
                 <joint type="hinge" name="a_h2" axis="0 1 0" pos=".15 0 0" limited="true" range="-90 90" stiffness="-.35" />
                 <joint type="hinge" name="a_h3" axis="1 0 0" pos=".15 0 0" limited="true" range="-90 90" stiffness=".5" />
-                <site name="a_rangefinder_forward" pos="0 .155 0" euler="-90 0 0" rgba="0 1 0 1" />
-                <site name="a_rangefinder_down" pos="0 0 -.12" euler="180 0 0" rgba="0 1 0 1" />
+                <site name="a_rangefinder_forward" pos="0 .15 -.025" euler="-90 0 0" rgba="0 1 0 1" />
+                <site name="a_rangefinder_down" pos="0 0 -.101" euler="180 0 0" rgba="0 1 0 1" />
                 <site name="a_pressure" pos=".01 0 -.1" euler="180 0 0" rgba="1 0 0 1" />
                 <body name="a_chamber">
                     <joint type="hinge" name="a_h1" axis="0 0 1" />
@@ -33,8 +33,8 @@
                 <geom name="b_motor_sim" type="box" size=".01 .01 .01" pos="-.13 0 -.035" mass=".0005" />
                 <joint type="hinge" name="b_h2" axis="0 1 0" pos="-.15 0 0" limited="true" range="-90 90" stiffness="-.35" />
                 <joint type="hinge" name="b_h3" axis="1 0 0" pos="-.15 0 0" limited="true" range="-90 90" stiffness=".5" />
-                <site name="b_rangefinder_forward" pos="0 .155 0" euler="-90 0 0" rgba="0 1 0 1" />
-                <site name="b_rangefinder_down" pos="0 0 -.12" euler="180 0 0" rgba="0 1 0 1" />
+                <site name="b_rangefinder_forward" pos="0 .15 -.025" euler="-90 0 0" rgba="0 1 0 1" />
+                <site name="b_rangefinder_down" pos="0 0 -.101" euler="180 0 0" rgba="0 1 0 1" />
                 <site name="b_pressure" pos=".01 0 -.1" euler="180 0 0" rgba="1 0 0 1" />
                 <body name="b_chamber">
                     <joint type="hinge" name="b_h1" axis="0 0 1" />

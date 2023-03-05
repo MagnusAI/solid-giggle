@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 xml_path = '../model/lappa.xml'
-simend = float('inf')
+simend = 30
 
 # For callback functions
 button_left = False

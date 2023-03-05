@@ -51,7 +51,7 @@ class LappaApi:
         self.state = state
 
     def get_sensor_values(self, module):
-        sensors = ["h1", "h2", "h3", "rangefinder_forward", "rangefinder_down", "gyro"]
+        sensors = ["h1", "h2", "h3", "rangefinder_forward", "rangefinder_down"]
         sensor_names = [module + "_" + sensor for sensor in sensors]
         return self.core.read_sensors(sensor_names)
     
@@ -152,7 +152,7 @@ class LappaApi:
 
     def is_obstructed(self, module):
         sensor_data = self.core.read_sensors([module + "_rangefinder_forward"])[0]
-        return sensor_data < self.OBSTACLE_THRESHOLD
+        return sensor_data < self.OBSTACLE_THRESHOLD and sensor_data >= 0
     
     def set_distance(self, module, target_distance, ctrl = -1):
         counter_module = "b" if module == "a" else "a"

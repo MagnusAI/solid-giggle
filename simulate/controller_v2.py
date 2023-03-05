@@ -13,10 +13,10 @@ def controller(model, data):
         if (API.is_fixable("a") and API.is_fixable("b")):
             STEP = 1
     elif (STEP == 1):
-        if (not (API.is_obstructed("a") and API.is_obstructed("b"))):
-            API.walk_straight(45, 1)
-        else:
+        if (API.is_obstructed("a") and API.is_obstructed("b")):
             STEP = 2
+        else:
+            API.walk_straight(45, 1)
     elif (STEP == 2):
         on_wall = API.transition_wall("a")
         if (on_wall):
@@ -25,7 +25,7 @@ def controller(model, data):
         if (API.is_fixed("a") and API.is_fixed("b")):
             STEP = 4
     elif (STEP == 4):
-        print("Sucess!")
+        return
     else:
         print("Something is wrong...")
     pass

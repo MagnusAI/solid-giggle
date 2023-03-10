@@ -34,8 +34,6 @@ class CoreApi:
         actuators = map(self.get_actuator, actuator_names)
         return [round(item[0], 4) for item in actuators]
 
-    
-
 class LappaApi:
     def __init__(self, state, FIXABLE_THRESHOLD = 0.01, OBSTACLE_THRESHOLD = 0.15):
         self.state = state
@@ -46,17 +44,17 @@ class LappaApi:
         self.DISTANCE_STEP = 0
         self.TRANSITION_WALLSTEP = 0
         self.CLIMBSTEP = 0
+        self.JUMPSTEP = 0
+        self.JUMPHEIGHT = 25
     
     def update_state(self, state):
         self.state = state
 
-    def get_sensor_values(self, module):
-        sensors = ["h1", "h2", "h3", "rangefinder_forward", "rangefinder_down"]
+    def get_sensor_values(self, module, sensors = ["h1", "h2", "h3", "rangefinder_forward", "rangefinder_down"]):
         sensor_names = [module + "_" + sensor for sensor in sensors]
         return self.core.read_sensors(sensor_names)
     
-    def get_actuator_values(self, module):
-        actuators = ["thrust", "rotor"]
+    def get_actuator_values(self, module, actuators = ["thrust", "rotor"]):
         actuator_names = [module + "_" + actuator for actuator in actuators]
         return self.core.read_actuators(actuator_names)
 
@@ -73,9 +71,9 @@ class LappaApi:
         actuator_data = self.core.read_actuators([module + "_thrust"])[0]
         return sensor_data <= self.FIXABLE_THRESHOLD and actuator_data == -1
 
-    def release_module(self, module):
+    def release_module(self, module, ctrl = 0):
         thruster = module + "_thrust"
-        self.core.set_actuator(thruster, 0)
+        self.core.set_actuator(thruster, ctrl)
 
     def rotate_module(self, module, ctrl):
         rotor = module + "_rotor"
@@ -133,10 +131,7 @@ class LappaApi:
                 self.WALKSTEP = 1
             else:
                 self.fix_module("a")
-                if (zctrl != 0):
-                    self.set_propeller("b", zctrl)
-                else:
-                    self.release_module("b")
+                self.release_module("b", zctrl)
                 self.set_h1_angle("a", angle, ctrl)
         elif (self.WALKSTEP == 1):
             if (round(self.get_angle("b"), 0) == angle):
@@ -144,10 +139,7 @@ class LappaApi:
                 self.WALKSTEP = 0
             else:
                 self.fix_module("b")
-                if (zctrl != 0):
-                    self.set_propeller("a", zctrl)
-                else:
-                    self.release_module("a")
+                self.release_module("a", zctrl)
                 self.set_h1_angle("b", angle, ctrl)
 
     def is_obstructed(self, module):
@@ -209,6 +201,43 @@ class LappaApi:
         elif (self.CLIMBSTEP == 5):
             return True
         return False
+    
+    def jump(self, module):
+        counter_module = "b" if module == "a" else "a"
+        if (self.JUMPSTEP == 0):
+            model_a = self.set_distance("a", self.OBSTACLE_THRESHOLD)
+            if (model_a):
+                self.JUMPSTEP = 1
+        elif (self.JUMPSTEP == 1):
+          model_b = self.set_distance("b", self.OBSTACLE_THRESHOLD)
+          if (model_b):
+              self.JUMPSTEP = 2
+        elif (self.JUMPSTEP == 2):
+            jump = self.set_height(module, self.JUMPHEIGHT)
+            if (jump):
+                if (self.is_obstructed(module)):
+                    self.JUMPHEIGHT += 10
+                else:
+                    self.JUMPSTEP = 3
+        elif (self.JUMPSTEP == 3):
+            self.set_height(module, self.JUMPHEIGHT)
+            angled = self.set_h1_angle(counter_module, 120)
+            if (angled):
+                self.JUMPSTEP = 4
+        elif (self.JUMPSTEP == 4):
+            self.fix_module(module)
+            self.set_height(counter_module, self.JUMPHEIGHT)
+            if (self.is_fixed(module)):
+                self.JUMPSTEP = 5
+        elif (self.JUMPSTEP == 5):
+            self.fix_module(module)
+            height = self.set_height(counter_module, self.JUMPHEIGHT)
+            if (height):
+                self.JUMPSTEP = 6
+        elif (self.JUMPSTEP == 6):
+            return True
+        return False
+
 
 
     def transition_wall(self, module):

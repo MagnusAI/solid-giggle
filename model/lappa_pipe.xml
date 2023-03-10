@@ -2,13 +2,12 @@
 <mujoco>
     <!-- set options to simulate underwater environment  -->
     <option density="900" viscosity=" 0.0009" />
-    <include file="lappa_model.xml"/>
+    <include file="robot_v2.xml"/>
 	<worldbody>
 		<geom name="floor" pos="0 1 -1" size="1 1.5 .2" type="plane" conaffinity="1" rgba="1 1 1 1"
 			condim="3" />
-            <!-- vertical wall in the center of the floor -->
-        <geom name="wall" pos="0 2 -.5" size=".5 1 2" type="plane" conaffinity="1" rgba="0 1 0 1"
-            condim="3" euler="90 0 90" />
-
+        <!-- horizontal pipe lying on the floor -->
+        <geom name="pipe" pos="0 1 -.9" size=".05 1 .2" type="cylinder" conaffinity="1" rgba="0 1 0 1"
+            condim="3" euler="90 90 0" />
 	</worldbody>
 </mujoco>

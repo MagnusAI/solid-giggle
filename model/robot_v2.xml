@@ -1,0 +1,90 @@
+<!-- The Lappa robot -->
+<mujoco model="Lappa">
+	<worldbody>
+        <body name="root">
+            <joint name="root_joint" type="free" pos="0 0 0" />
+			<geom name="root" type="cylinder" fromto="-.075 0 0 .075 0 0" size=".005" mass=".0001" rgba=".5 .5 .5 .25" />
+			<body name="a_connector" pos="-.0375 0 0">
+				<geom name="a_connector" type="box" size=".0075 .0075 .0375" euler="0 90 0" rgba="1 1 0 1" mass="0.01" />
+				<body name="b_connector" pos=".0775 0 0">
+                    <geom name="b_connector" type="box" size=".0075 .0075 .0375" euler="0 90 0" rgba="1 0 1 1" mass="0.01" />
+                </body>
+			</body>
+			<body name="a_module" pos=".155 0 0" euler="0 0 180">
+				<geom name="a_house" type="cylinder" size=".0775 .005" rgba="1 0 0 1" mass="0.2" />
+				<geom name="a_lock" type="box" size=".05 .05 .005" pos="0 0 .005" mass="0" />
+				<joint name="a_h2" type="hinge" axis="0 1 0" pos=".0775 0 0" limited="true" range="-45 45" />
+                <joint name="h3" type="hinge"  pos=".155 0 0" axis="1 0 0" limited="true" range="-90 90" stiffness=".8" damping="2" />    
+                <body name="a_chamber" pos="0 0 0">
+					<joint name="a_h1" type="hinge" axis="0 0 1" stiffness="2" damping="2" />
+                    <geom name="a_gear" type="cylinder" fromto="0 0 0 0 0 -.05" size=".044" rgba=".3 .3 .3 1" mass="0.05" />
+					<geom name="a_chamber" type="cylinder" fromto="0 0 -.05 0 0 -.1" size=".065" rgba="0 0 1 1" mass="0.35" />
+                    <site name="a_propeller" pos="0 0 -.05" />
+                    <!-- Surface sensors -->
+                    <site name="a_chamber_0" pos="0 0 -.10" euler="0 180 0" />
+                    <site name="a_chamber_1" pos=".06 0 -.10" euler="0 180 0" />
+                    <site name="a_chamber_2" pos="-.06 0 -.10" euler="0 180 0" />
+                    <site name="a_chamber_3" pos="0 .06 -.10" euler="0 180 0" />
+                    <site name="a_chamber_4" pos="0 -.06 -.10" euler="0 180 0" />
+                    <site name="a_chamber_5" pos=".05 .0325 -.10" euler="0 180 0" />
+                    <site name="a_chamber_6" pos=".05 -.0325 -.10" euler="0 180 0" />
+                    <site name="a_chamber_7" pos="-.05 .0325 -.10" euler="0 180 0" />
+                    <site name="a_chamber_8" pos="-.05 -.0325 -.10" euler="0 180 0" />
+				</body>
+			</body>
+			<body name="b_module" pos="-.155 0 0">
+				<geom name="b_house" type="cylinder" size=".0775 .005" rgba="1 0 0 1" mass="0.2" />
+				<geom name="b_lock" type="box" size=".05 .05 .005" pos="0 0 .005" mass="0" />
+				<joint name="b_h2" type="hinge" axis="0 1 0" pos=".0775 0 0" limited="true" range="-45 45" />
+				<body name="b_chamber" pos="0 0 0">
+					<joint name="b_h1" type="hinge" axis="0 0 1" stiffness="2" />
+					<geom name="b_gear" type="cylinder" fromto="0 0 0 0 0 -.05" size=".044" rgba=".3 .3 .3 1" mass="0.05" />
+                    <geom name="b_chamber" type="cylinder" fromto="0 0 -.05 0 0 -.1" size=".065" rgba="0 0 1 1" mass="0.35" />
+                    <site name="b_propeller" pos="0 0 -.05" />
+                    <!-- Surface sensors -->
+                    <site name="b_chamber_0" pos="0 0 -.10" euler="0 180 0" />
+                    <site name="b_chamber_1" pos=".06 0 -.10" euler="0 180 0" />
+                    <site name="b_chamber_2" pos="-.06 0 -.10" euler="0 180 0" />
+                    <site name="b_chamber_3" pos="0 .06 -.10" euler="0 180 0" />
+                    <site name="b_chamber_4" pos="0 -.06 -.10" euler="0 180 0" />
+                    <site name="b_chamber_5" pos=".05 .0325 -.10" euler="0 180 0" />
+                    <site name="b_chamber_6" pos=".05 -.0325 -.10" euler="0 180 0" />
+                    <site name="b_chamber_7" pos="-.05 .0325 -.10" euler="0 180 0" />
+                    <site name="b_chamber_8" pos="-.05 -.0325 -.10" euler="0 180 0" />
+				</body>
+			</body>
+		</body>
+	</worldbody>
+	<equality>
+
+	</equality>
+    <sensor>
+        <!-- A Module Surface Sensors -->
+        <rangefinder name="a_chamber_0" site="a_chamber_0" cutoff=".05" />
+        <rangefinder name="a_chamber_1" site="a_chamber_1" cutoff=".05" />
+        <rangefinder name="a_chamber_2" site="a_chamber_2" cutoff=".05" />
+        <rangefinder name="a_chamber_3" site="a_chamber_3" cutoff=".05" />
+        <rangefinder name="a_chamber_4" site="a_chamber_4" cutoff=".05" />
+        <rangefinder name="a_chamber_5" site="a_chamber_5" cutoff=".05" />
+        <rangefinder name="a_chamber_6" site="a_chamber_6" cutoff=".05" />
+        <rangefinder name="a_chamber_7" site="a_chamber_7" cutoff=".05" />
+        <rangefinder name="a_chamber_8" site="a_chamber_8" cutoff=".05" />
+        <!-- B Module Surface Sensors -->
+        <rangefinder name="b_module_0" site="b_chamber_0" cutoff=".05" />
+        <rangefinder name="b_module_1" site="b_chamber_1" cutoff=".05" />
+        <rangefinder name="b_module_2" site="b_chamber_2" cutoff=".05" />
+        <rangefinder name="b_module_3" site="b_chamber_3" cutoff=".05" />
+        <rangefinder name="b_module_4" site="b_chamber_4" cutoff=".05" />
+        <rangefinder name="b_module_5" site="b_chamber_5" cutoff=".05" />
+        <rangefinder name="b_module_6" site="b_chamber_6" cutoff=".05" />
+        <rangefinder name="b_module_7" site="b_chamber_7" cutoff=".05" />
+        <rangefinder name="b_module_8" site="b_chamber_8" cutoff=".05" />
+    </sensor>
+    <actuator>
+        <motor name="a_thrust" site="a_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 15"  />
+        <motor name="b_thrust" site="b_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 15"  />
+		<motor name="h3" joint="h3" gear="1" />
+        <motor name="a_h1" joint="a_h1" gear="2" />
+        <motor name="b_h1" joint="b_h1" gear="2" />
+	</actuator>
+</mujoco>

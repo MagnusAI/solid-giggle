@@ -21,6 +21,7 @@
 				<geom name="a_lock" type="box" size=".05 .05 .005" pos="0 0 .005" mass="0" />
 				<joint name="a_h2" type="hinge" axis="0 1 0" pos=".0775 0 0" limited="true" range="-45 45" />
 				<joint name="h3" type="hinge" pos=".155 0 0" axis="1 0 0" limited="true" range="-90 90" stiffness=".8" damping="2" />
+				<site name="a_range" pos="0 -.0775 -.075" euler="90 0 0" />
 				<body name="a_chamber" pos="0 0 0">
 					<joint name="a_h1" type="hinge" axis="0 0 1" />
 					<geom name="a_gear" type="cylinder" fromto="0 0 0 0 0 -.05" size=".044" rgba=".3 .3 .3 1" mass="0.05" />
@@ -36,6 +37,7 @@
 				<geom name="b_house" type="cylinder" size=".0775 .005" rgba="1 0 0 1" mass="0.2" />
 				<geom name="b_lock" type="box" size=".05 .05 .005" pos="0 0 .005" mass="0" />
 				<joint name="b_h2" type="hinge" axis="0 1 0" pos=".0775 0 0" limited="true" range="-45 45" />
+				<site name="b_range" pos="0 .0775 -.075" euler="-90 0 0" />
 				<body name="b_chamber" pos="0 0 0">
 					<joint name="b_h1" type="hinge" axis="0 0 1" />
 					<geom name="b_gear" type="cylinder" fromto="0 0 0 0 0 -.05" size=".044" rgba=".3 .3 .3 1" mass="0.05" />
@@ -50,8 +52,10 @@
 		</body>
 	</worldbody>
   <sensor>
-    <force site="a_vacuum" />
-    <force site="b_vacuum" />
+		<rangefinder name="a_range" site="a_range" />
+		<rangefinder name="b_range" site="b_range" />
+    <force name="a_vacuum" site="a_vacuum" />
+    <force name="b_vacuum" site="b_vacuum" />
   </sensor>
 	<actuator>
 		<motor name="a_thrust" site="a_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 10" />

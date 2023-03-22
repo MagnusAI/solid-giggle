@@ -34,33 +34,28 @@ class LappaApi(InterfaceLappaApi):
         self.state.actuator(module + "_" + actuator).ctrl = ctrl
 
     def is_fixable(self, module):
+        print(self.state.sensor(module + "_vacuum").data)
         pass
 
     def fix_module(self, module):
-        # print all posible values of the body
-        house = self.state.body(module + "_module")
-        house.cvel = [0,0,0,0,0,0]
-        house.crb = [0,0,0,0,0,0,0,0,0,0]
-        house.xpos= [ 0, 0, 0]
-        print(house)
-
-        #print(body)
-        # set thrust to -1 and fix the position of the module making it static
         self.state.actuator(module + "_thrust").ctrl = -1
-        
-    def print_test(self):
-        part = self.state.body("a_chamber")
-        print(part)
+        self.state.actuator(module + "_vacuum").ctrl = 1
 
     def release_module(self, module, ctrl=0):
-        self.state.actuator(module + "_thrust").ctrl = ctrl
-        self[module + "pos"] = None
+        self.state.actuator(module + "_thrust").ctrl = 0.5
+        self.state.actuator(module + "_vacuum").ctrl = 0
 
     def is_obstructed(self, module):
-        pass
+        distance = self.state.sensor(module + "_range").data[0]
+        return distance > 0.1
 
     def rotate_module(self, module, degrees, ctrl):
-        pass
+        # fix module
+        self.fix_module(module)
+        # release other module
+        self.release_module("a" if module == "b" else "b")
+        # rotate module
+        self.state.actuator(module + "_h1").ctrl = ctrl
 
     def stop(self):
         pass

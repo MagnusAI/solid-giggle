@@ -1,10 +1,10 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from lappa_controller import controller
+from controller import controller
 import os
 
 # Set path to XML file
-xml_path = os.path.join(os.path.dirname(__file__), '../model/lappa_pipe.xml')
+xml_path = os.path.join(os.path.dirname(__file__), '../model/lappa.xml')
 
 # MuJoCo data structures
 model = mj.MjModel.from_xml_path(xml_path)

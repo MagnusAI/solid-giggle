@@ -1,0 +1,85 @@
+<mujoco model="Active adhesion example">
+	<!-- Adding some fluid viscosity to prevent the hanging sphere from jiggling too much. -->
+	<option viscosity="1" />
+	<size memory="10M" />
+	<visual>
+		<headlight diffuse=".2 .2 .2" />
+		<scale contactwidth="0.1" jointwidth="0.05" jointlength=".5" />
+	</visual>
+	<default>
+		<default class="active_adhesion">
+			<!--
+			Geoms in the active_adhesion class are "inflated" with a margin of 1cm, but contacts are
+			activated only at a depth gap of 1cm, leading to a layer of inactive contacts at a 1cm
+			distance from the surface. However the contacts can be used by the adhesion actuator.
+			-->
+			<geom rgba=".8 .5 .5 1" margin=".01" gap=".01" solref="0" solimp="0 1" friction=".5" />
+		</default>
+		<default class="object">
+			<geom rgba=".5 .8 .5 1" density="1000" solref="0" solimp="0 1" friction=".5" />
+		</default>
+	</default>
+	<worldbody>
+		<light pos="0.4 -.15 .6" dir="-1 .5 -1" diffuse=".7 .7 .7" />
+		<light pos="-.4 -.15 .6" dir="1 .5 -1" diffuse=".7 .7 .7" />
+		<body name="Lappa" pos="0 0 .3">
+			<joint name ="root" type="free" damping="0" />
+			<geom type="capsule" fromto="-.0125 0 0 .0125 0 0" size=".0025" rgba="0 1 0 1" />
+      <body name="arm">
+        <geom type="capsule" fromto="-.0125 0 0 .0125 0 0" size=".0025" rgba="0 1 0 1" />
+        <body name="a_arm" pos="-.0125 0 0">
+          <geom type="box" size=".01 .005 .005" rgba="1 1 0 1" />
+          <joint name="h3" type="hinge" pos=".0125 0 0" axis="1 0 0" limited="true" range="-90 90" stiffness="1" damping="2" />
+        </body>
+        <body name="b_arm" pos=".0125 0 0">
+          <geom type="box" size=".01 .005 .005" rgba="0 1 1 1" />
+        </body>
+      </body>
+			<body name="a_module" pos="-.05 0 0" euler="0 0 180">
+				<geom name="a_house" type="cylinder" euler="0 0 90" size=".025 .0015" rgba="1 0 0 1" />
+				<joint name="a_h2" type="hinge" pos="-.025 0 0" axis="0 1 0" limited="true" range="-45 45" damping="0" stiffness="0" />
+        <site name="a_propeller" pos="0 0 -.0075" />
+				<body name="a_chamber" pos="0 0 -.0015">
+          <joint name="a_h1" type="hinge" axis="0 0 1" limited="true" range="-180 180" damping="0" />
+					<site name="a_force_sensor" group="3" />
+					<geom type="cylinder" fromto="0 0 0 0 0 -.02" size=".02" rgba="0 0 1 1" />
+					<body name="a_vacuum" pos="0 0 -.019" childclass="active_adhesion">
+					  <geom name="a_vacuum" type="box" size=".01 .01 .001" rgba="1 0 1 1" />
+          </body>
+				</body>
+			</body>
+      <body name="b_module" pos=".05 0 0" euler="0 0 180">
+				<geom name="b_house" type="cylinder" euler="0 0 90" size=".025 .0015" rgba="1 0 0 1" />
+				<joint name="b_h2" type="hinge" pos=".025 0 0" axis="0 1 0" limited="true" range="-45 45" damping="0" stiffness="0" />
+				<joint name="b_h1" type="hinge" axis="0 0 1" limited="true" range="-180 180" damping="1" />
+        <site name="b_propeller" pos="0 0 -.0075" />
+				<body name="b_chamber" pos="0 0 -.0015" >
+					<site name="b_force_sensor" group="3" />
+					<geom type="cylinder" fromto="0 0 0 0 0 -.02" size=".02" rgba="0 0 1 1" />
+          <body name="b_vacuum" pos="0 0 -.019" childclass="active_adhesion">
+					  <geom name="b_vacuum" type="box" size=".01 .01 .001" rgba="1 0 1 1" />
+          </body>
+				</body>
+			</body>
+		</body>
+
+		<body name="ground" pos="0 0 .05">
+			<geom name="ground" size=".25 .25 .025" class="object" />
+		</body>
+	</worldbody>
+  <equality>
+    <connect body1="a_arm" body2="a_module" anchor="-.00625 0 0" /> 
+    <connect body1="b_arm" body2="b_module" anchor=".00625 0 0" />
+  </equality>
+	<actuator>
+		<motor name="a_thrust" site="a_propeller" ctrlrange="-1 1" ctrllimited="true" gear="0 0 1" />
+		<motor name="b_thrust" site="b_propeller" ctrlrange="-1 1" ctrllimited="true" gear="0 0 1" />
+		<motor name="a_h1" joint="a_h1" ctrlrange="-1 1" ctrllimited="true" gear="1" />
+		<adhesion name="adhere_a" body="a_vacuum" ctrlrange="0 1" gain="10" />
+		<adhesion name="adhere_b" body="b_vacuum" ctrlrange="0 1" gain="10" />
+	</actuator>
+	<sensor>
+		<force site="a_force_sensor" />
+		<force site="b_force_sensor" />
+	</sensor>
+</mujoco>

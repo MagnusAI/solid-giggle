@@ -56,6 +56,8 @@
 		<rangefinder name="b_range" site="b_range" />
     <force name="a_vacuum" site="a_vacuum" />
     <force name="b_vacuum" site="b_vacuum" />
+		<jointpos name="a_h1" joint="a_h1" />
+		<jointpos name="b_h1" joint="b_h1" />
   </sensor>
 	<actuator>
 		<motor name="a_thrust" site="a_propeller" ctrllimited="true" ctrlrange="-1. 1." gear="0 0 10" />

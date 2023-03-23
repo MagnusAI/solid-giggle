@@ -1,5 +1,5 @@
 class InterfaceLappaApi:
-    def update_state(self, state):
+    def update_data(self, data):
         # Update the state of the robot (sensor values, actuator values, etc.)
         pass
 
@@ -47,41 +47,9 @@ class InterfaceLappaApi:
         # return: True if the module is obstructed, False otherwise
         pass
 
-    def rotate_module(self, module, degrees, ctrl):
+    def rotate_module(self, module, ctrl):
         # Rotate the module by the specified degrees with the specified control value
         # module: "a" or "b"
-        # degrees: Degrees to rotate
         # ctrl: Control value
         # return: True if the module is rotated, False otherwise
-        pass
-
-    def stop(self):
-        # Stop the robot
-        pass
-    
-    def walk(self, ctrl, angle, release_ctrl = 0):
-        # Walk the robot
-        # ctrl: Control value
-        # angle: Angle of the walking
-        # release_ctrl: Control value to which the modules are will rest at after release
-        pass
-
-    def jump(self, ctrl, release_ctrl = 0):
-        # Jump the robot
-        # ctrl: Control value
-        # release_ctrl: Control value to which the modules are will rest at after release
-        pass
-
-    # 270 degree change of plane 
-    def climb(self, ctrl, release_ctrl = 0):
-        # Climb the robot
-        # ctrl: Control value
-        # release_ctrl: Control value to which the modules are will rest at after release
-        pass
-
-    # 90 degree change of plane
-    def descend(self, ctrl, release_ctrl = 0):
-        # Descend the robot
-        # ctrl: Control value
-        # release_ctrl: Control value to which the modules are will rest at after release
         pass

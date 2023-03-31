@@ -49,8 +49,8 @@ class LappaApi(InterfaceLappaApi):
         self.data.actuator(module + "_thrust").ctrl = -1
         self.data.actuator(module + "_vacuum").ctrl = 1
 
-    def release_module(self, module, ctrl=0):
-        self.data.actuator(module + "_thrust").ctrl = .35
+    def release_module(self, module, ctrl=.75):
+        self.data.actuator(module + "_thrust").ctrl = ctrl
         self.data.actuator(module + "_vacuum").ctrl = 0
 
     def is_obstructed(self, module):
@@ -68,3 +68,10 @@ class LappaApi(InterfaceLappaApi):
 
         modifier = 1 if module == "a" else -1
         self.data.actuator(module + "_h1").ctrl = ctrl * modifier
+
+    def stop_rotation(self, module):
+        self.data.actuator(module + "_h1").ctrl = 0
+        joint = module + "_h1"
+        self.data.joint(joint).qvel = 0
+        self.data.joint(joint).qpos = 0
+        self.data.joint(joint).qacc = 0

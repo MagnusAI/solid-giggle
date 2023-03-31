@@ -1,89 +1,108 @@
 import math
+import sys
 from api import *
 
 API = None
 STATE = None
 MOVE_TARGET = None
 MOVE_STEP = 0
+JUMP_STEP = 0
 
-# The robot state is represented by an array of 4 elements:
-# [af, bf, ar, br]
-# Where ar and br are the modules rangefinder detecting obstacles
-# and af and bf are the modules force sensors detecting the ground
-# the state use booleans to represent the presence of an obstacle
-# or the presence of the ground
-
-# RULES define the action to take when a state is detected
-RULES = {
-    # No obstacle avoidance for now, we just try to move past/through
-    (True, True, False, False): "move",
-    # No obstacle avoidance for now, we just try to move past/through
-    (True, True, False, True): "move",
-    (True, True, True, False): "move",
-    (True, True, True, True): "climb",
-    (False, True, True, True): "climb",
-    (True, False, True, True): "climb",
-    (False, True, False, True): "jump",
-    (True, False, True, False): "jump",
-    (False, True, True, False): "descend",
-    (False, False, True, True): "descend",
-    (True, False, False, True): "descend",
-    (False, True, False, False): "descend",
-    (True, False, False, False): "descend",
-    (False, False, False, True): "descend",
-    (False, False, True, False): "descend",
-    (False, False, False, False): "descend",
-}
-
-
-def get_state():
+def lift_module(module):
     global API
-    # Read the sensors
-    ar = False #API.read_sensors("a", ["range"])[0]
-    br = False #API.read_sensors("b", ["range"])[0]
-    af = API.read_sensors("a", ["vacuum"])[0]
-    bf = API.read_sensors("b", ["vacuum"])[0]
+    counter_module = "a" if module == "b" else "b"
+    API.fix_module(counter_module)
+    API.stop_rotation(counter_module)
+    API.set_actuator(module, "vacuum", 0)
+    API.set_actuator(module, "thrust", .8)
+    a_h2 = math.degrees(API.read_sensors("a", ["h2"])[0])
+    b_h2 = math.degrees(API.read_sensors("b", ["h2"])[0])
+    if (abs(a_h2) > 35 and abs(b_h2) > 35):
+        return True
+    return False
 
-    # Convert the sensor values to booleans
-    af = af < -1
-    #ar = ar < 0.1
-    bf = bf < -1
-    #br = br < 0.1
+def lower_module(module):
+    global API
+    API.set_actuator(module, "thrust", -.5)
+    API.set_actuator(module, "vacuum", .3)
+    surfaced = API.read_sensors(module, ["vacuum"])[0] < 0
+    if (surfaced):
+        return True
+    return False
 
-    # Return the state
-    return (af, bf, ar, br)
+def jump():
+    global API, JUMP_STEP
+    if (JUMP_STEP == 0):
+        step_complete = lift_module("a")
+        if (step_complete):
+            JUMP_STEP = 1
+    elif (JUMP_STEP == 1):
+        step_complete = angle_module("b", 90)
+        if (step_complete):
+            JUMP_STEP = 2
+    elif (JUMP_STEP == 2):
+        step_complete = lower_module("a")
+        if (step_complete):
+            JUMP_STEP = 3
+    elif (JUMP_STEP == 3):
+        API.set_actuator("a", "thrust", .3)
+        API.set_actuator("b", "thrust", .3)
+        step_complete = reset_angle("a") and reset_angle("b")
+        if (step_complete):
+            API.set_actuator("a", "thrust", 0.6)
+            if (angle_module("a", -350)):
+                API.fix_module("a")
+                API.stop_rotation("a")
+                API.stop_rotation("b")
+                JUMP_STEP = 4
+    elif (JUMP_STEP == 4):
+        step_complete = lift_module("b")
+        if (step_complete):
+            JUMP_STEP = 5
+    elif (JUMP_STEP == 5):
+        pass
+
+    return False
 
 
-def get_action(state):
-    # Get the action to take from the rules
-    action = RULES[state]
-
-    # Return the action
-    return action
 
 
 def move():
     global MOVE_STEP
+    a_touch = API.read_sensors("a", ["touch"])[0] > 0
+    b_touch = API.read_sensors("b", ["touch"])[0] > 0
+    if (a_touch or b_touch):
+        API.unlock()
+        pass
+
     if (MOVE_STEP == 0) :
-        if (forward_module("a", 45)):
+        API.fix_module("a")
+        API.release_module("b")
+        if (angle_module("a", -45)):
+            API.fix_module("b")
             MOVE_STEP = 1
     elif (MOVE_STEP == 1):
-        if (forward_module("b", -90)):
+        API.fix_module("b")
+        API.release_module("a")
+        if (angle_module("b", 90)):
+            API.fix_module("a")
             MOVE_STEP = 2
     elif (MOVE_STEP == 2):
-        if (forward_module("a", 90)):
+        API.fix_module("a")
+        API.release_module("b")
+        if (angle_module("a", -90)):
+            API.fix_module("b")
             MOVE_STEP = 1
     else: 
         pass
 
 
-def forward_module(module, degrees):
+def angle_module(module, degrees):
     global API, MOVE_TARGET
 
-    counter_module = "a" if module == "b" else "b"
-    API.lock()
-    h1 = API.read_sensors(counter_module, ["h1"])[0]
+    h1 = API.read_sensors(module, ["h1"])[0]
     h1_deg = math.degrees(h1) % 360
+    print("h1_deg: " + str(h1_deg))
 
     if (MOVE_TARGET is None):
         MOVE_TARGET = (h1_deg + degrees) % 360
@@ -91,16 +110,12 @@ def forward_module(module, degrees):
     diff = abs(MOVE_TARGET - h1_deg) % 360
     min_diff = min(diff, 360 - diff)
 
-
     if (min_diff > 5):
-        API.fix_module(counter_module)
-        API.release_module(module)
-        API.rotate_module(counter_module, -.25)
-    else:
-        API.set_actuator(counter_module, "h1", 0)
         API.fix_module(module)
+        API.rotate_module(module, -.75)
+    else:
+        API.stop_rotation(module)
         MOVE_TARGET = None
-        API.unlock()
         return True
     return False
 
@@ -110,29 +125,7 @@ def climb():
     # TODO: Implement this
     pass
 
-
-def jump():
-    # TODO: Implement this
-    pass
-
-
 def descend():
-    global API
-    sensor_a = API.read_sensors("a", ["vacuum"])[0]
-    sensor_b = API.read_sensors("b", ["vacuum"])[0]
-    floating_value = -.3
-    if sensor_a < floating_value and sensor_b < floating_value:
-        API.fix_module("a")
-        API.fix_module("b")
-    elif sensor_a < floating_value:
-        API.fix_module("a")
-        API.set_actuator("b", "thrust", -1)
-    elif sensor_b < floating_value:
-        API.fix_module("b")
-        API.set_actuator("a", "thrust", -1)
-    else:
-        API.set_actuator("a", "thrust", -1)
-        API.set_actuator("b", "thrust", -1)
     pass
 
 
@@ -149,32 +142,31 @@ def perform_action(action):
     else:
         raise Exception("Unknown action: " + action)
 
+def reset_angle(module):
+    global API
+    if (angle_module(module, 0)):
+        return True
+    return False
 
-TEST = True
-START = False
-
+TEST = False
+STEP = 0
 
 def controller(model, data):
-    global API, STATE, TEST, START
+    global API, STATE, TEST, STEP
     if (API is None):
         API = LappaApi(data)
         pass
     else:
         API.update_data(data)
 
-    if (not API.is_locked()):
-        STATE = get_state()
+    a_vaccum = round(API.read_sensors("a", ["vacuum"])[0])
+    b_vaccum = round(API.read_sensors("b", ["vacuum"])[0])
 
-    if (STATE == (True, True, False, False)):
-        START = True
-
-    if (START):
-        move()
-        
-
-    # Get the action to take
-    #action = get_action(STATE)
-    # Perform the action
-    # perform_action(action)
-
+    landed = a_vaccum < 0 and b_vaccum < 0
+    if (landed):
+        TEST = True
+    
+    if (TEST):
+        jump()
+        print(JUMP_STEP)
     pass

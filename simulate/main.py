@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from controller import controller
+from controller_v2 import controller
 import os
 
 # Set path to XML file
@@ -27,12 +27,19 @@ context = mj.MjrContext(model, mj.mjtFontScale.mjFONTSCALE_150.value)
 mj.mjv_defaultCamera(cam)
 mj.mjv_defaultOption(opt)
 
+# End simulation after simend seconds
+# 0 means no end 
+simend = 0
+
 # Simulation loop
 while not glfw.window_should_close(window):
     # Step simulation
     simstart = data.time
     while (data.time - simstart < 1.0/60.0):
         mj.mj_step(model, data)
+
+    if (simend > 0 and data.time >= simend):
+        break
 
     # Update and render visualization
     viewport_width, viewport_height = glfw.get_framebuffer_size(window)

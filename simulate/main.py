@@ -4,7 +4,7 @@ from controller_v3 import controller
 import os
 
 # Set path to XML file
-xml_path = os.path.join(os.path.dirname(__file__), '../model/lappa.xml')
+xml_path = os.path.join(os.path.dirname(__file__), '../model/index.xml')
 
 # MuJoCo data structures
 model = mj.MjModel.from_xml_path(xml_path)

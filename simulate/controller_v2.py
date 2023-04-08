@@ -9,6 +9,8 @@ DEGREE_OFFSET = 5
 # print all actuator values and sensor values
 def print_data(data):
     global API
+    pos = API.get_position()
+
     a_h1 = API.get_h1('a')
     a_h2 = API.get_h2("a")
     a_touch = API.get_touch("a")
@@ -23,6 +25,7 @@ def print_data(data):
     b_adhesion = API.get_adhesion("b")
     b_pressure = API.get_pressure("b")
 
+    print("position: " + str(pos))
     print("a_h1: " + str(a_h1) + " b_h1: " + str(b_h1))
     print("a_h2: " + str(a_h2) + " b_h2: " + str(b_h2))
     print("a_touch: " + str(a_touch) + " b_touch: " + str(b_touch))
@@ -108,11 +111,6 @@ def is_fixed(module):
 
 
 def get_state():
-    # A state containg the following values:
-    # 1. Whether the angle of the modules (h1 values) are set to 90 degrees
-    # 2. Whether or not the modules are fixed
-    # 3. Whether or not the modules are lifted
-
     global API
     a_fixed = is_fixed('a')
     b_fixed = is_fixed('b')
@@ -172,7 +170,7 @@ def jump():
         lift_module("b")
         print("step_6")
     elif (step_7):
-        rotate_module("a", .035, 90)
+        rotate_module("a", .1, 90)
         print("step_7")
     elif (step_8):
         lower_module("b")

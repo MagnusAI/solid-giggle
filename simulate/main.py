@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from controller_v2 import controller
+from controller_v3 import controller
 import os
 
 # Set path to XML file

@@ -170,7 +170,7 @@ def perform_action(rule):
     elif (rule == "s4"):
         lift("a")
     elif (rule == "s5"):
-        rotate_to("b", 90)
+        rotate_to("b", 80)
     elif (rule == "s6"):
         lower("a")
     elif (rule == "s7"):
@@ -178,7 +178,7 @@ def perform_action(rule):
         END = True
         print("Test finished")
     elif (rule == "s8"):
-        rotate_to("b", 90)
+        rotate_to("b", 80)
     elif (rule == "s9"):
         lift("a")
     elif (rule == "s10"):

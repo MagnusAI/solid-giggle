@@ -6,22 +6,40 @@ STATE = None
 
 # A dictionary that maps a state to a rule
 RULES = {
-    (True, True, False, False): "s0",
-    (True, False, False, False): "s1",
-    (True, False, True, False): "s2",
-    (True, False, True, True): "s3",
-    (True, True, True, True): "s4",
-    (False, True, True, True): "s5",
-    (False, True, True, False): "s6",
-    (False, True, False, False): "s7",
-    (False, True, False, True): "s8",
-    (True, True, False, True): "s9",
-    (True, False, False, True): "s10",
-    (True, True, True, False): "s11",
-    (False, False, False, True): "s12",
-    (False, False, True, True): "s13",
-    (False, False, True, False): "s14",
-    (False, False, False, False): "s15",
+    (True, True, False, False, False): "s0",
+    (True, False, False, False, False): "s1",
+    (True, False, True, False, False): "s2",
+    (True, False, True, True, False): "s3",
+    (True, True, True, True, False): "s4",
+    (False, True, True, True, False): "s5",
+    (False, True, True, False, False): "s6",
+    (False, True, False, False, False): "s7",
+    (False, True, False, True, False): "s8",
+    (True, True, False, True, False): "s9",
+    (True, False, False, True, False): "s10",
+    (True, True, True, False, False): "s11",
+    (False, False, False, True, False): "s12",
+    (False, False, True, True, False): "s13",
+    (False, False, True, False, False): "s14",
+    (False, False, False, False, False): "s15",
+
+    (True, True, False, False, True): "s16",
+    (False, False, False, True, True): "s16",
+
+    (True, False, False, False, True): "s1",
+    (True, False, True, False, True): "s2",
+    (True, False, True, True, True): "s3",
+    (True, True, True, True, True): "s4",
+    (False, True, True, True, True): "s5",
+    (False, True, True, False, True): "s6",
+    (False, True, False, False, True): "s7",
+    (False, True, False, True, True): "s8",
+    (True, True, False, True, True): "s9",
+    (True, False, False, True, True): "s10",
+    (True, True, True, False, True): "s11",
+    (False, False, True, True, True): "s13",
+    (False, False, True, False, True): "s14",
+    (False, False, False, False, True): "s15",
 }
 
 
@@ -134,13 +152,19 @@ def is_rotated():
     return rot_90 or rot_270
 
 
+def is_leveled():
+    global API
+    pos = round(API.get_position()[2], 2)
+    return pos > -.25
+
 def get_state():
     global STATE
     a_fixed = API.get_pressure("a") < -100
     b_fixed = API.get_pressure("b") < -100
     lifted = is_lifted()
     rotated = is_rotated()
-    state = (a_fixed, b_fixed, lifted, rotated)
+    leveled = is_leveled()
+    state = (a_fixed, b_fixed, lifted, rotated, leveled)
 
     # Debug
     if (state != STATE):
@@ -148,7 +172,7 @@ def get_state():
         print("state: " + str(state))
         print("rule: " + get_rule(state))
         STATE = state
-    
+
     return state
 
 
@@ -175,8 +199,6 @@ def perform_action(rule):
         lower("a")
     elif (rule == "s7"):
         lower("a")
-        END = True
-        print("Test finished")
     elif (rule == "s8"):
         rotate_to("b", 80)
     elif (rule == "s9"):
@@ -185,9 +207,12 @@ def perform_action(rule):
         rotate_to("a", 270)
     elif (rule == "s11"):
         lift("b")
+    elif (rule == "s16"):
+        END = True
     else:
         lower("a")
         lower("b")
+
 
 def controller(model, data):
     global API, END

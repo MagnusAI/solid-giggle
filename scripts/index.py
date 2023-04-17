@@ -3,7 +3,7 @@ import subprocess
 
 scripts = [
     'build_floor.py',
-    'build_wall_90.py',
+    'build_wall_90_40.py',
 ]
 
 print("Building XML files...\n")

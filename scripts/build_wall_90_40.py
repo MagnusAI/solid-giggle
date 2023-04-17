@@ -28,7 +28,7 @@ xml_file = f'''
 '''
 
 # Save the XML file
-with open('model/walls/wall_90.xml', 'w') as f:
+with open('model/walls/wall_90_40.xml', 'w') as f:
     f.write(xml_file)
 
 print(f'Complete. ({filename}))')

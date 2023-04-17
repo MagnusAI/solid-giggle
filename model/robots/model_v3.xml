@@ -3,7 +3,7 @@
 		<scale contactwidth="0.1" jointwidth="0.05" jointlength=".5" />
 	</visual>
 	<worldbody>
-		<body name="root">
+		<body name="root" pos="0 0 0">
 			<freejoint />
 			<body name="base">
 				<geom name="arm" type="capsule" fromto="-.1 0 0 .1 0 0" size=".012" rgba="1 1 1 1" mass=".02" />
@@ -13,10 +13,10 @@
 					<geom name="a_house" type="cylinder" size=".1 .005" pos="-.1 0 0" rgba="1 0 0 1" mass=".1" />
 					<joint name="a_h1" type="hinge" axis="0 0 1" pos="-.1 0 -.05" />
 					<body name="a_chamber">
-            <site name="a_vacuum" pos="-.1 0 -.1" />
+						<site name="a_vacuum" pos="-.1 0 -.1" />
 						<site name="a_touch" type="cylinder" size=".105 .015" pos="-.1 0 -.075" />
 						<geom name="a_touch" type="cylinder" size=".105 .015" pos="-.1 0 -.075" rgba="0 1 0 .25" mass="0" />
-            <geom name="a_gear" type="cylinder" size=".065 .05" pos="-.1 0 -.05" rgba="0.8 0.7 0.2 1" mass="0" />
+						<geom name="a_gear" type="cylinder" size=".065 .05" pos="-.1 0 -.05" rgba="0.8 0.7 0.2 1" mass="0" />
 						<geom name="a_chamber" type="box" size=".045 .045 .05" pos="-.1 0 -.05" rgba="0 0 1 1" mass=".25" />
 					</body>
 				</body>
@@ -27,10 +27,10 @@
 					<geom name="b_house" type="cylinder" size=".1 .005" pos=".1 0 0" rgba="0 0 1 1" mass=".1" />
 					<joint name="b_h1" type="hinge" axis="0 0 1" pos=".1 0 -.05" />
 					<body name="b_chamber">
-            <site name="b_vacuum" pos=".1 0 -.1" />
+						<site name="b_vacuum" pos=".1 0 -.1" />
 						<site name="b_touch" type="cylinder" size=".105 .015" pos=".1 0 -.075" />
 						<geom name="b_touch" type="cylinder" size=".105 .015" pos=".1 0 -.075" rgba="0 1 0 .25" mass="0" />
-            <geom name="b_gear" type="cylinder" size=".065 .05" pos=".1 0 -.05" rgba="0.8 0.7 0.2 1" mass="0" />
+						<geom name="b_gear" type="cylinder" size=".065 .05" pos=".1 0 -.05" rgba="0.8 0.7 0.2 1" mass="0" />
 						<geom name="b_chamber" type="box" size=".045 .045 .05" pos=".1 0 -.05" rgba="0 0 1 1" mass=".25" />
 					</body>
 				</body>
@@ -38,10 +38,10 @@
 		</body>
 	</worldbody>
 	<sensor>
-    <force name="a_vacuum" site="a_vacuum" />
-    <force name="b_vacuum" site="b_vacuum" />
-    <jointpos name="a_h1" joint="a_h1" />
-    <jointpos name="b_h1" joint="b_h1" />
+		<force name="a_vacuum" site="a_vacuum" />
+		<force name="b_vacuum" site="b_vacuum" />
+		<jointpos name="a_h1" joint="a_h1" />
+		<jointpos name="b_h1" joint="b_h1" />
 		<jointpos name="a_h2" joint="a_h2" />
 		<jointpos name="b_h2" joint="b_h2" />
 		<touch name="a_touch" site="a_touch" />

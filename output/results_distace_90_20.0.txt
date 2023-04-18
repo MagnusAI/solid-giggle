@@ -1,0 +1,3 @@
+{'state': (True, False, True, False, False), 'position': array([-0.05690123,  0.02026812,  0.02592071]), 'success': False}
+{'state': (True, False, True, False, False), 'position': array([-0.05690123,  0.02026812,  0.02592071]), 'success': False}
+Success rate: 0.0%

@@ -42,8 +42,7 @@ class InterfaceLappaApi:
         # return: True if the module is rotated, False otherwise
         pass
     
-    def reset_module(self, module):
-        # Reset the module
-        # module: "a" or "b"
+    def reset(self):
+        # Reset the to the initial state
         pass
     

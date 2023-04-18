@@ -46,7 +46,8 @@
 		<jointpos name="b_h2" joint="b_h2" />
 		<touch name="a_touch" site="a_touch" />
 		<touch name="b_touch" site="b_touch" />
-		<framepos name="position" objtype="body" objname="root" />
+		<framepos name="a_position" objtype="site" objname="a_vacuum" />
+		<framepos name="b_position" objtype="site" objname="b_vacuum" />
 	</sensor>
 	<actuator>
 		<motor name="a_thrust" site="a_propeller" ctrllimited="true" ctrlrange="-1 1" gear="0 0 15" />

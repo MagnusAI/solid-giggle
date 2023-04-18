@@ -5,9 +5,19 @@ from interface_api_v2 import InterfaceLappaApi
 class LappaApi(InterfaceLappaApi):
     def __init__(self, data):
         self.data = data
+        self.locked = False
 
     def update_data(self, data):
         self.data = data
+
+    def is_locked(self):
+        return self.locked
+
+    def lock(self):
+        self.locked = True
+
+    def unlock(self):
+        self.locked = False
 
     def set_thruster(self, module, ctrl):
         self.data.actuator(module + "_thrust").ctrl = ctrl
@@ -20,7 +30,7 @@ class LappaApi(InterfaceLappaApi):
 
     def get_adhesion(self, module):
         return self.data.actuator(module + "_vacuum").ctrl[0]
-    
+
     def get_h1_actuator(self, module):
         return self.data.actuator(module + "_h1").ctrl[0]
 
@@ -58,5 +68,18 @@ class LappaApi(InterfaceLappaApi):
         self.data.joint(module + "_h1").qpos = 0
         self.data.joint(module + "_h1").qacc = 0
 
-    def get_position(self):
-        return self.data.sensor("position").data
+    def get_position(self, module):
+        pos = self.data.sensor(module + "_position").data
+        return pos
+
+    def reset(self):
+        self.stop_rotation("a")
+        self.stop_rotation("b")
+        self.set_thruster("a", 0)
+        self.set_thruster("b", 0)
+        self.reset_module("a")
+        self.reset_module("b")
+        self.data.qpos[:] = 0
+        self.data.qvel[:] = 0
+        self.data.qacc[:] = 0
+        pass

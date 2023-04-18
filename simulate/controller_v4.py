@@ -1,3 +1,5 @@
+import os
+import sys
 from api_v2 import *
 
 API = None
@@ -24,7 +26,7 @@ RULES = {
     (False, False, False, False, False): "s15",
 
     (True, True, False, False, True): "s16",
-    (False, False, False, True, True): "s16",
+    (False, False, False, True, True): "s12",
 
     (True, False, False, False, True): "s1",
     (True, False, True, False, True): "s2",
@@ -45,7 +47,8 @@ RULES = {
 
 def print_debug_data(data):
     global API
-    pos = API.get_position()
+    a_pos = API.get_position("a")
+    b_pos = API.get_position("b")
 
     a_h1 = API.get_h1('a')
     a_h2 = API.get_h2("a")
@@ -64,7 +67,7 @@ def print_debug_data(data):
     b_pressure = API.get_pressure("b")
 
     print("----------------------------------")
-    print("position: " + str(pos))
+    print("position: " + str(a_pos) + " | " + str(b_pos))
     print("a_h1: " + str(a_h1) + " b_h1: " + str(b_h1))
     print("a_h2: " + str(a_h2) + " b_h2: " + str(b_h2))
     print("a_touch: " + str(a_touch) + " b_touch: " + str(b_touch))
@@ -154,8 +157,10 @@ def is_rotated():
 
 def is_leveled():
     global API
-    pos = round(API.get_position()[2], 2)
-    return pos > -.25
+    a_pos = round(API.get_position("a")[2], 2)
+    b_pos = round(API.get_position("b")[2], 2)
+    return a_pos > 0.1 and b_pos > 0.1
+
 
 def get_state():
     global STATE
@@ -166,11 +171,11 @@ def get_state():
     leveled = is_leveled()
     state = (a_fixed, b_fixed, lifted, rotated, leveled)
 
-    # Debug
     if (state != STATE):
-        print_debug_data(state)
-        print("state: " + str(state))
-        print("rule: " + get_rule(state))
+        # Debug
+        # print_debug_data(state)
+        # print("state: " + str(state))
+        # print("rule: " + get_rule(state))
         STATE = state
 
     return state
@@ -230,3 +235,20 @@ def controller(model, data):
     state = get_state()
     rule = get_rule(state)
     perform_action(rule)
+
+    if (data.time > 30):
+        END = True
+
+    if (END):
+        state = get_state()
+        result = {
+            "state": state,
+            "a_pos": API.get_position("a"),
+            "b_pos": API.get_position("b"),
+            "success": is_leveled() and state[0] and state[1]
+        }
+
+        with open("output/results.txt", "a") as f:
+            f.write(str(result) + "\n")
+
+        sys.exit(0)

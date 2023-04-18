@@ -1,3 +1,4 @@
+import json
 from api_v2 import *
 import numpy as np
 
@@ -54,7 +55,13 @@ STATES = [
 ]
 
 # Define the Q-learning table
-Q_TABLE = np.zeros((len(STATES), len(ACTIONS)))
+# If there exist a file at output/q_table.json, load it
+# Otherwise, initialize the Q-learning table with zeros
+try:
+    with open("output/q_table.json", "r") as f:
+        Q_TABLE = np.array(json.load(f))
+except:
+    Q_TABLE = np.zeros((len(STATES), len(ACTIONS)))
 
 # Define the learning parameters
 LEARNING_RATE = 0.1
@@ -65,13 +72,13 @@ EPSILON = 0.1
 # Define the reward function
 
 
-def get_reward(state, action):
-    a_fixed, b_fixed, lifted, rotated, leveled = state
-    if not (a_fixed and b_fixed):
+def get_reward(state):
+    global AC_TAKEN
+    if ((not state[0] and not state[1]) and (AC_TAKEN.__len__() > 0)):
         return -100
-    elif not leveled:
+    elif not state[4]:
         return -1
-    elif state == (True, True, False, False, True) and action == "no_op":
+    elif state == (True, True, False, False, True):
         return 100
     else:
         return -1
@@ -99,6 +106,9 @@ def update_q_table(state, action, reward, next_state):
     td_target = reward + DISCOUNT_FACTOR * max_q
     td_error = td_target - Q_TABLE[state_index, action_index]
     Q_TABLE[state_index, action_index] += LEARNING_RATE * td_error
+    # Store Q-table in a JSON file
+    with open("output/q_table.json", "w") as f:
+        json.dump(Q_TABLE.tolist(), f)
 
 
 def get_state():
@@ -192,11 +202,46 @@ def is_rotated():
 def is_leveled():
     global API
     pos = round(API.get_position()[2], 2)
-    return pos > -.25
+    return pos > 0.1
+
+
+def perform_action(action):
+    if action == "lift_a":
+        lift("a")
+    elif action == "lift_b":
+        lift("b")
+    elif action == "lower_a":
+        lower("a")
+    elif action == "lower_b":
+        lower("b")
+    elif action == "rotate_a_90":
+        rotate_to("a", 90)
+    elif action == "rotate_a_270":
+        rotate_to("a", 270)
+    elif action == "rotate_b_90":
+        rotate_to("b", 90)
+    elif action == "rotate_b_270":
+        rotate_to("b", 270)
+    elif action == "no_op":
+        pass
+    else:
+        print("Invalid action:", action)
+
+    next_state = get_state()
+
+    if (next_state == PREV_STATE):
+        return 0, next_state
+    else:
+        reward = get_reward(next_state)
+        return reward, next_state
+
+
+AC_TAKEN = []
+PREV_STATE = None
 
 
 def controller(model, data):
-    global API, END
+    global API, END, AC_TAKEN, PREV_STATE
 
     if (END):
         return
@@ -208,42 +253,37 @@ def controller(model, data):
         API.update_data(data)
 
         state = get_state()
+
+        if (state == PREV_STATE):
+            return
+
         action = choose_action(state, EPSILON)
+        reward, next_state = perform_action(action)
+        print("action:", action, "reward:", reward, "next_state:", next_state)
 
-        if action == "lift_a":
-            lift("a")
-        elif action == "lift_b":
-            lift("b")
-        elif action == "lower_a":
-            lower("a")
-        elif action == "lower_b":
-            lower("b")
-        elif action == "rotate_a_90":
-            rotate_to("a", 90)
-        elif action == "rotate_a_270":
-            rotate_to("a", 270)
-        elif action == "rotate_b_90":
-            rotate_to("b", 90)
-        elif action == "rotate_b_270":
-            rotate_to("b", 270)
-        elif action == "no_op":
-            pass
+
+        if (len(AC_TAKEN) == 0 or AC_TAKEN[-1] != action):
+            AC_TAKEN.append(action)
+
+        if (reward != 0):
+            update_q_table(state, action, reward, next_state)
+            print("reward:", reward)
+            print("Q_TABLE:\n", Q_TABLE)
+
+        if (reward == -100):
+            API.reset()
         else:
-            print("Invalid action:", action)
-
-        reward = get_reward(state, action)
-        next_state = get_state()
-        update_q_table(state, action, reward, next_state)
+            pass
 
         if next_state == (True, True, False, False, True):
             END = True
 
-        # Print some information for debugging purposes
-        print("state:", state)
-        print("action:", action)
-        print("reward:", reward)
-        print("next_state:", next_state)
-        print("Q_TABLE:\n", Q_TABLE)
+        PREV_STATE = next_state
 
-        # Send the action to the simulator
-        API.do_action(action)
+        # Print some information for debugging purposes
+        # print("state:", state)
+        # print("action:", action)
+        # print("reward:", reward)
+        # print("next_state:", next_state)
+        # print("AC_TAKEN:\n", AC_TAKEN)
+        # print("Q_TABLE:\n", Q_TABLE)

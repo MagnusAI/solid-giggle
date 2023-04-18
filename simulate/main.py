@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from controller_q import controller
+from controller_v4 import controller
 import os
 
 # Set path to XML file
@@ -28,7 +28,7 @@ mj.mjv_defaultCamera(cam)
 mj.mjv_defaultOption(opt)
 
 # End simulation after simend seconds
-# 0 means no end 
+# 0 means no end
 simend = 0
 
 # Simulation loop
@@ -44,7 +44,8 @@ while not glfw.window_should_close(window):
     # Update and render visualization
     viewport_width, viewport_height = glfw.get_framebuffer_size(window)
     viewport = mj.MjrRect(0, 0, viewport_width, viewport_height)
-    mj.mjv_updateScene(model, data, opt, None, cam, mj.mjtCatBit.mjCAT_ALL.value, scene)
+    mj.mjv_updateScene(model, data, opt, None, cam,
+                       mj.mjtCatBit.mjCAT_ALL.value, scene)
     mj.mjr_render(viewport, scene, context)
 
     # Swap buffers and process events

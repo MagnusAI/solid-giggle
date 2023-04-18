@@ -1,0 +1,6 @@
+{'state': (True, False, True, False, False), 'position': array([-0.09293592,  0.1068732 ,  0.02627428]), 'success': False}
+{'state': (True, False, True, False, False), 'position': array([-0.09293592,  0.1068732 ,  0.02627428]), 'success': False}
+{'state': (True, False, True, False, False), 'position': array([-0.09293592,  0.1068732 ,  0.02627428]), 'success': False}
+{'state': (True, False, True, False, False), 'position': array([-0.09293592,  0.1068732 ,  0.02627428]), 'success': False}
+{'state': (True, False, True, False, False), 'position': array([-0.09293592,  0.1068732 ,  0.02627428]), 'success': False}
+Success rate: 0.0%

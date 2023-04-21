@@ -1,16 +1,15 @@
 import math
 from interface_api_v2 import InterfaceLappaApi
 
+AXIS = 2  # 0 = x, 1 = y, 2 = z
+
 
 class LappaApi(InterfaceLappaApi):
     def __init__(self, data):
         self.data = data
         self.locked = False
 
-    def update_data(self, data):
-        self.data = data
-
-    def is_locked(self):
+    def locked(self):
         return self.locked
 
     def lock(self):
@@ -18,6 +17,9 @@ class LappaApi(InterfaceLappaApi):
 
     def unlock(self):
         self.locked = False
+
+    def update_data(self, data):
+        self.data = data
 
     def set_thruster(self, module, ctrl):
         self.data.actuator(module + "_thrust").ctrl = ctrl
@@ -80,6 +82,109 @@ class LappaApi(InterfaceLappaApi):
         self.reset_module("a")
         self.reset_module("b")
         self.data.qpos[:] = 0
+        self.data.qpos[2] = 0.15
         self.data.qvel[:] = 0
         self.data.qacc[:] = 0
         pass
+
+    def lift(self, module):
+        self.set_adhesion(module, 0)
+        self.set_thruster(module, .2)
+        self.reset_module(module)
+
+    def lower(self, module):
+        self.set_thruster(module, -1)
+        pressure = self.get_pressure(module)
+        if (pressure < -2):
+            self.set_adhesion(module, .55)
+
+    def is_angle(self, module, target):
+        h1 = round(self.get_h1(module), 1)
+        d1 = abs(target - h1)
+        d2 = 360 - d1
+        diff = min(d1, d2)
+        allowed_offset = 5
+        return diff < allowed_offset
+
+    def rotate(self, module, ctrl):
+        counter_module = "b" if module == "a" else "a"
+        self.stop_rotation(counter_module)
+        self.rotate_module(module, ctrl)
+
+    def rotate_to(self, module, target, ctrl=.5):
+        if (self.is_angle(module, target)):
+            self.stop_rotation(module)
+            return
+        else:
+            h1 = round(self.get_h1(module), 1)
+            diff = abs(h1 - target) % 360
+            if diff <= 180:
+                ctrl = ctrl if target > h1 else -ctrl
+            else:
+                ctrl = ctrl if target < h1 else -ctrl
+            self.rotate(module, ctrl)
+
+    def rotate_forward(self, module):
+        self.rotate_to(module, 90)
+
+    def rotate_backward(self, module):
+        self.rotate_to(module, 270)
+
+    def perform_action(self, action):
+        if action == "lift_a":
+            self.lift("a")
+        elif action == "lift_b":
+            self.lift("b")
+        elif action == "lower_a":
+            self.lower("a")
+        elif action == "lower_b":
+            self.lower("b")
+        elif action == "rotate_a_forward":
+            self.rotate_forward("a")
+        elif action == "rotate_a_backward":
+            self.rotate_backward("a")
+        elif action == "rotate_b_forward":
+            self.rotate_forward("b")
+        elif action == "rotate_b_backward":
+            self.rotate_backward("b")
+        elif action == "stop_a_rotation":
+            self.stop_rotation("a")
+        elif action == "stop_b_rotation":
+            self.stop_rotation("b")
+        elif action == "stop_rotation":
+            self.stop_rotation("a")
+            self.stop_rotation("b")
+        elif action == "stop":
+            self.stop_rotation("a")
+            self.stop_rotation("b")
+            self.set_thruster("a", 0)
+            self.set_thruster("b", 0)
+        elif action == "reset":
+            self.reset()
+        else:
+            print("Unknown action: " + action)
+
+    def is_lifted(self):
+        a_h2 = self.get_h2("a")
+        b_h2 = self.get_h2("b")
+        acc = a_h2 + b_h2
+        offset = 5
+        return acc > (45 - offset)
+
+    def is_rotated(self):
+        a_h1 = self.get_h1("a")
+        b_h1 = self.get_h1("b")
+        acc = a_h1 + b_h1
+        offset = 5
+        return acc > (80 - offset)
+
+    def read_state_from_sensors(self):
+        global AXIS
+        a_fixed = self.get_pressure("a") < -45
+        b_fixed = self.get_pressure("b") < -45
+
+        lifted = self.is_lifted()
+        rotated = self.is_rotated()
+        a_leveled = round(self.get_position("a")[AXIS], 2) > 0.15
+        b_leveled = round(self.get_position("b")[AXIS], 2) > 0.15
+        return (a_fixed, b_fixed, lifted, rotated, a_leveled, b_leveled)

@@ -1,7 +1,7 @@
 import subprocess
 
 for i in range(30):
-    distance = 0.3 + (i * 0.01)
+    distance = 0.25 + (i * 0.01)
 
     subprocess.call(['python', f'scripts/build/index.py', f'{distance}'])
 

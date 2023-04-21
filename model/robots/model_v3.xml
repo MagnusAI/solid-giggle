@@ -3,7 +3,7 @@
 		<scale contactwidth="0.1" jointwidth="0.05" jointlength=".5" />
 	</visual>
 	<worldbody>
-		<body name="root" pos="0 0 0">
+		<body name="root" pos="0 0 .15">
 			<freejoint />
 			<body name="base">
 				<geom name="arm" type="capsule" fromto="-.1 0 0 .1 0 0" size=".012" rgba="1 1 1 1" mass=".02" />
@@ -16,8 +16,7 @@
 						<site name="a_vacuum" pos="-.1 0 -.1" />
 						<site name="a_touch" type="cylinder" size=".105 .015" pos="-.1 0 -.075" />
 						<geom name="a_touch" type="cylinder" size=".105 .015" pos="-.1 0 -.075" rgba="0 1 0 .25" mass="0" />
-						<geom name="a_gear" type="cylinder" size=".065 .05" pos="-.1 0 -.05" rgba="0.8 0.7 0.2 1" mass="0" />
-						<geom name="a_chamber" type="box" size=".045 .045 .05" pos="-.1 0 -.05" rgba="0 0 1 1" mass=".25" />
+						<geom name="a_gear" type="cylinder" size=".065 .05" pos="-.1 0 -.05" rgba="0.8 0.7 0.2 1" mass=".25" />
 					</body>
 				</body>
 				<body name="b_module" pos=".1 0 0">
@@ -30,8 +29,7 @@
 						<site name="b_vacuum" pos=".1 0 -.1" />
 						<site name="b_touch" type="cylinder" size=".105 .015" pos=".1 0 -.075" />
 						<geom name="b_touch" type="cylinder" size=".105 .015" pos=".1 0 -.075" rgba="0 1 0 .25" mass="0" />
-						<geom name="b_gear" type="cylinder" size=".065 .05" pos=".1 0 -.05" rgba="0.8 0.7 0.2 1" mass="0" />
-						<geom name="b_chamber" type="box" size=".045 .045 .05" pos=".1 0 -.05" rgba="0 0 1 1" mass=".25" />
+						<geom name="b_gear" type="cylinder" size=".065 .05" pos=".1 0 -.05" rgba="0.8 0.7 0.2 1" mass=".25" />
 					</body>
 				</body>
 			</body>

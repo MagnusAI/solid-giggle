@@ -1,10 +1,5 @@
-{'state': (True, True, False, False, True), 'position': array([-0.0044206 ,  0.45174411,  0.17152324]), 'success': True}
-{'state': (True, True, False, False, True), 'position': array([-0.0044206 ,  0.45174411,  0.17152324]), 'success': True}
-{'state': (True, True, False, False, True), 'position': 0.17152323630821056, 'success': True}
-{'state': (False, True, False, False, False), 'a_pos': array([0.34370062, 0.25100693, 0.07978177]), 'b_pos': array([ 0.10399763, -0.05790672, -0.13497985]), 'success': False}
-{'state': (False, True, False, False, False), 'a_pos': array([0.34370062, 0.25100693, 0.07978177]), 'b_pos': array([ 0.10399763, -0.05790672, -0.13497985]), 'success': False}
-{'state': (False, True, True, True, False), 'a_pos': array([-0.29909731,  0.17509984,  0.18744499]), 'b_pos': array([-0.1604745 , -0.11053902, -0.17582959]), 'success': False}
-{'state': (True, True, False, False, True), 'a_pos': array([0.18776229, 0.37412167, 0.13664035]), 'b_pos': array([-0.1679972 ,  0.37530546,  0.32516143]), 'success': True}
-{'state': (True, True, False, False, True), 'a_pos': array([-0.62048218,  0.36428909,  0.17382616]), 'b_pos': array([-0.20317669,  0.3604357 ,  0.24872375]), 'success': True}
-{'state': (True, True, False, False, True), 'a_pos': array([-0.48472652,  0.37215706,  0.28748514]), 'b_pos': array([-0.12339821,  0.37510108,  0.11732715]), 'success': True}
-{'state': (True, False, False, True, False), 'a_pos': array([-0.11420825,  0.41511557,  0.13599492]), 'b_pos': array([ 0.23252087,  0.41500317, -0.06345074]), 'success': False}
+{'state': (True, True, False, False, True), 'a_pos': array([-0.4896492 ,  0.36714779,  0.3150983 ]), 'b_pos': array([-0.1238173 ,  0.36057793,  0.31995877]), 'actions_count': 10, 'time': 4.10399999999977, 'success': True}
+{'state': (True, True, False, False, True), 'a_pos': array([-0.44656237,  0.37407774,  0.51124528]), 'b_pos': array([-0.12927453,  0.36045156,  0.32845772]), 'actions_count': 15, 'time': 5.975999999999564, 'success': True}
+{'state': (True, True, False, False, True), 'a_pos': array([-0.44657125,  0.37407833,  0.51125107]), 'b_pos': array([-0.12927371,  0.36045387,  0.3284751 ]), 'actions_count': 11, 'time': 5.975999999999564, 'success': True}
+{'state': (True, True, False, False, True), 'a_pos': array([-0.44657125,  0.37407833,  0.51125107]), 'b_pos': array([-0.12927371,  0.36045387,  0.3284751 ]), 'actions_count': 11, 'time': 5.975999999999564, 'success': True}
+{'state': (True, False, False, False, False), 'a_pos': array([-0.18924724,  0.00077795,  0.02473112]), 'b_pos': array([0.21119549, 0.00310043, 0.02507528]), 'actions_count': 101, 'time': 0.34800000000000025, 'success': False}

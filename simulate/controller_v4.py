@@ -5,47 +5,164 @@ from api_v2 import *
 API = None
 END = False
 STATE = None
+AXIS = 2  # 0 = x, 1 = y, 2 = z
 
 # A dictionary that maps a state to a rule
+# RULES = {
+#     (True, True, False, False, False): "r0",
+#     (True, False, False, False, False): "r1",
+#     (True, False, True, False, False): "r2",
+#     (True, False, True, True, False): "r3",
+#     (True, True, True, True, False): "r4",
+#     (False, True, True, True, False): "r5",
+#     (False, True, True, False, False): "r5",
+#     (False, True, False, False, False): "r7",
+#     (False, True, False, True, False): "r8",
+#     (True, True, False, True, False): "r9",
+#     (True, False, False, True, False): "r10",
+#     (True, True, True, False, False): "r11",
+#     (False, False, False, True, False): "r12",
+#     (False, False, True, True, False): "r13",
+#     (False, False, True, False, False): "r14",
+#     (False, False, False, False, False): "r15",
+
+#     (True, True, False, False, True): "r16",
+#     (False, False, False, True, True): "r12",
+
+#     (True, False, False, False, True): "r1",
+#     (True, False, True, False, True): "r2",
+#     (True, False, True, True, True): "r3",
+#     (True, True, True, True, True): "r4",
+#     (False, True, True, True, True): "r6",
+#     (False, True, True, False, True): "r5",
+#     (False, True, False, False, True): "r7",
+#     (False, True, False, True, True): "r7",
+#     (True, True, False, True, True): "r9",
+#     (True, False, False, True, True): "r10",
+#     (True, True, True, False, True): "r11",
+#     (False, False, True, True, True): "r13",
+#     (False, False, True, False, True): "r14",
+#     (False, False, False, False, True): "r15",
+# }
+
 RULES = {
-    (True, True, False, False, False): "s0",
-    (True, False, False, False, False): "s1",
-    (True, False, True, False, False): "s2",
-    (True, False, True, True, False): "s3",
-    (True, True, True, True, False): "s4",
-    (False, True, True, True, False): "s5",
-    (False, True, True, False, False): "s6",
-    (False, True, False, False, False): "s7",
-    (False, True, False, True, False): "s8",
-    (True, True, False, True, False): "s9",
-    (True, False, False, True, False): "s10",
-    (True, True, True, False, False): "s11",
-    (False, False, False, True, False): "s12",
-    (False, False, True, True, False): "s13",
-    (False, False, True, False, False): "s14",
-    (False, False, False, False, False): "s15",
+    (False, False, False, False, False): "r0",
+    (False, False, False, False, True): "r0",
+    (False, False, False, True, False): "r0",
+    (False, False, False, True, True): "r0",
+    (False, False, True, False, False): "r0",
+    (False, False, True, False, True): "r0",
+    (False, False, True, True, False): "r0",
+    (False, False, True, True, True): "r0",
 
-    (True, True, False, False, True): "s16",
-    (False, False, False, True, True): "s12",
+    (True, True, False, False, False): "r1",
+    (True, True, False, False, True): "goal",
+    (True, True, False, True, False): "r1",
+    (True, True, False, True, True): "goal",
+    (True, True, True, False, False): "r2",
+    (True, True, True, False, True): "goal",
+    (True, True, True, True, False): "r2",
+    (True, True, True, True, True): "goal",
 
-    (True, False, False, False, True): "s1",
-    (True, False, True, False, True): "s2",
-    (True, False, True, True, True): "s3",
-    (True, True, True, True, True): "s4",
-    (False, True, True, True, True): "s5",
-    (False, True, True, False, True): "s6",
-    (False, True, False, False, True): "s7",
-    (False, True, False, True, True): "s8",
-    (True, True, False, True, True): "s9",
-    (True, False, False, True, True): "s10",
-    (True, True, True, False, True): "s11",
-    (False, False, True, True, True): "s13",
-    (False, False, True, False, True): "s14",
-    (False, False, False, False, True): "s15",
+    (True, False, False, False, False): "r1",
+    (True, False, False, False, True): "r0",
+    (True, False, False, True, False): "r3",
+    (True, False, False, True, True): "r0",
+    (True, False, True, False, False): "r4",
+    (True, False, True, False, True): "r0",
+    (True, False, True, True, False): "r0",
+    (True, False, True, True, True): "r0",
+
+    (False, True, False, False, False): "r0",
+    (False, True, False, False, True): "r0",
+    (False, True, False, True, False): "r0",
+    (False, True, False, True, True): "r0",
+    (False, True, True, False, False): "r0",
+    (False, True, True, False, True): "r0",
+    (False, True, True, True, False): "r5",
+    (False, True, True, True, True): "r0",
+
 }
 
 
-def print_debug_data(data):
+def get_state():
+    global STATE
+    a_fixed = API.get_pressure("a") < -45
+    b_fixed = API.get_pressure("b") < -45
+    lifted = is_lifted()
+    rotated = is_rotated()
+    leveled = is_leveled()
+    state = (a_fixed, b_fixed, lifted, rotated, leveled)
+
+    if (state != STATE):
+        # Debug
+        print_debug_data()
+        print("state: " + str(state))
+        print("rule: " + get_rule(state))
+        STATE = state
+
+    return state
+
+
+def perform_action(rule):
+    global END
+    if (rule == "r0"):
+        lower("a")
+        lower("b")
+    elif (rule == "r1"):
+        lift("b")
+    elif (rule == "r2"):
+        lift("a")
+    elif (rule == "r3"):
+        rotate("a", 270)
+    elif (rule == "r4"):
+        rotate("a", 90)
+    elif (rule == "r5"):
+        rotate("b", 90)
+    elif (rule == "goal"):
+        stop()
+    else:
+        print("No action")
+        stop()
+
+# def perform_action(rule):
+#     global END
+#     if (rule == "r0"):
+#         lift("b")
+#     elif (rule == "r1"):
+#         lift("b")
+#     elif (rule == "r2"):
+#         rotate_to("a", 270)
+#     elif (rule == "r3"):
+#         lower("b")
+#     elif (rule == "r4"):
+#         lift("a")
+#     elif (rule == "r5"):
+#         rotate_to("b", 80)
+#     elif (rule == "r6"):
+#         lower("a")
+#     elif (rule == "r7"):
+#         lower("a")
+#     elif (rule == "r8"):
+#         lower("a")
+#     elif (rule == "r9"):
+#         lift("a")
+#     elif (rule == "r10"):
+#         rotate_to("a", 270)
+#     elif (rule == "r11"):
+#         lift("b")
+#     elif (rule == "r12"):
+#         lower("b")
+#     elif (rule == "r13"):
+#         lower("b")
+#     elif (rule == "r16"):
+#         stop()
+#     else:
+#         lower("a")
+#         lower("b")
+
+
+def print_debug_data():
     global API
     a_pos = API.get_position("a")
     b_pos = API.get_position("b")
@@ -81,17 +198,17 @@ def print_debug_data(data):
 
 def lower(module):
     global API
-    API.set_thruster(module, -.5)
+    API.set_thruster(module, -1)
     pressure = API.get_pressure(module)
-    if (pressure < 0):
-        API.set_thruster(module, -1)
-        API.set_adhesion(module, 1)
+    if (pressure < -2):
+        API.set_adhesion(module, .55)
 
 
 def lift(module):
     global API
     API.set_adhesion(module, 0)
-    API.set_thruster(module, .5)
+    API.set_thruster(module, .2)
+    API.reset_module(module)
 
 
 def rotate(module, ctrl):
@@ -126,7 +243,6 @@ def rotate_to(module, target, ctrl=.5):
         API.stop_rotation(module)
         return
     else:
-        API.set_thruster(module, .1)
         h1 = round(API.get_h1(module), 1)
         diff = abs(h1 - target) % 360
         if diff <= 180:
@@ -156,29 +272,10 @@ def is_rotated():
 
 
 def is_leveled():
-    global API
-    a_pos = round(API.get_position("a")[2], 2)
-    b_pos = round(API.get_position("b")[2], 2)
-    return a_pos > 0.1 and b_pos > 0.1
-
-
-def get_state():
-    global STATE
-    a_fixed = API.get_pressure("a") < -100
-    b_fixed = API.get_pressure("b") < -100
-    lifted = is_lifted()
-    rotated = is_rotated()
-    leveled = is_leveled()
-    state = (a_fixed, b_fixed, lifted, rotated, leveled)
-
-    if (state != STATE):
-        # Debug
-        # print_debug_data(state)
-        # print("state: " + str(state))
-        # print("rule: " + get_rule(state))
-        STATE = state
-
-    return state
+    global API, AXIS
+    a_pos = round(API.get_position("a")[AXIS], 2)
+    b_pos = round(API.get_position("b")[AXIS], 2)
+    return a_pos > 0.15 and b_pos > 0.15
 
 
 def get_rule(state):
@@ -186,58 +283,34 @@ def get_rule(state):
     return RULES[state]
 
 
-def perform_action(rule):
+def stop():
     global END
-    if (rule == "s0"):
-        lift("b")
-    elif (rule == "s1"):
-        lift("b")
-    elif (rule == "s2"):
-        rotate_to("a", 270)
-    elif (rule == "s3"):
-        lower("b")
-    elif (rule == "s4"):
-        lift("a")
-    elif (rule == "s5"):
-        rotate_to("b", 80)
-    elif (rule == "s6"):
-        lower("a")
-    elif (rule == "s7"):
-        lower("a")
-    elif (rule == "s8"):
-        rotate_to("b", 80)
-    elif (rule == "s9"):
-        lift("a")
-    elif (rule == "s10"):
-        rotate_to("a", 270)
-    elif (rule == "s11"):
-        lift("b")
-    elif (rule == "s16"):
-        END = True
-    else:
-        lower("a")
-        lower("b")
+    END = True
+
+
+ACTIONS = []
 
 
 def controller(model, data):
-    global API, END
-
-    if (END):
-        return
+    global API, END, ACTIONS
 
     if (API is None):
         API = LappaApi(data)
         return
     else:
         API.update_data(data)
-        # print_debug_data(data)
 
     state = get_state()
     rule = get_rule(state)
     perform_action(rule)
 
-    if (data.time > 30):
-        END = True
+    if (len(ACTIONS) == 0 or ACTIONS[-1] != rule):
+        ACTIONS.append(rule)
+        if (len(ACTIONS) > 100):
+            stop()
+
+    if (data.time > 60):
+        stop()
 
     if (END):
         state = get_state()
@@ -245,10 +318,13 @@ def controller(model, data):
             "state": state,
             "a_pos": API.get_position("a"),
             "b_pos": API.get_position("b"),
+            "actions_count": len(ACTIONS),
+            "time": data.time,
             "success": is_leveled() and state[0] and state[1]
         }
 
         with open("output/results.txt", "a") as f:
             f.write(str(result) + "\n")
 
+        print("Actions: ", ACTIONS)
         sys.exit(0)

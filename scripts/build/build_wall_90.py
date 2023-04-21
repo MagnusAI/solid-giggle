@@ -12,7 +12,7 @@ filename = os.path.basename(__file__)
 
 xml_elements = ""
 for j in range(10):
-    z = (j * -0.05)+.3
+    z = (j * -0.05)+.5
     for i in range(40):
         # Without Color
         gray_value = random.random()

@@ -121,7 +121,7 @@ def controller(model, data):
 
     done = False
 
-    if (data.time > (60 * 10)):
+    if (data.time > (36000)):
         done = True
 
     if not done and not robot.locked:

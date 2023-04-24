@@ -8,7 +8,7 @@ class LappaApi(InterfaceLappaApi):
     def __init__(self, data):
         self.data = data
         self.locked = False
-
+    
     def locked(self):
         return self.locked
 
@@ -33,6 +33,8 @@ class LappaApi(InterfaceLappaApi):
             "a"), " , ", self.get_adhesion("b"))
         print("Rotation: ", self.get_h1_actuator(
             "a"), " , ", self.get_h1_actuator("b"))
+        print("Range: ", round(self.get_range("a"), 2),
+              " , ", round(self.get_range("b"), 2))
 
     def update_data(self, data):
         self.data = data
@@ -51,6 +53,13 @@ class LappaApi(InterfaceLappaApi):
 
     def get_h1_actuator(self, module):
         return self.data.actuator(module + "_h1").ctrl[0]
+
+    def get_range(self, module):
+        data = self.data.sensor(module + "_rangefinder").data[0]
+        cm = data * 100
+        if (self.get_pressure(module) > 2):
+            return cm - 5  # The pressure somehow messes up the range
+        return cm
 
     def get_h1(self, module):
         scalar = self.data.sensor(module + "_h1").data[0]
@@ -91,6 +100,7 @@ class LappaApi(InterfaceLappaApi):
         return pos
 
     def reset(self):
+        self.unlock()
         self.stop_rotation("a")
         self.stop_rotation("b")
         self.set_thruster("a", 0)
@@ -111,7 +121,7 @@ class LappaApi(InterfaceLappaApi):
     def lower(self, module):
         self.set_thruster(module, -1)
         pressure = self.get_pressure(module)
-        if (pressure < -2):
+        if (pressure > 2):
             self.set_adhesion(module, .55)
 
     def is_angle(self, module, target):
@@ -198,11 +208,11 @@ class LappaApi(InterfaceLappaApi):
 
     def read_state_from_sensors(self):
         global AXIS
-        a_fixed = self.get_pressure("a") < -45
-        b_fixed = self.get_pressure("b") < -45
-
+        a_fixed = self.get_pressure("a") > 45
+        b_fixed = self.get_pressure("b") > 45
         lifted = self.is_lifted()
-        rotated = self.is_rotated()
+        a_range = self.get_range("a")
+        b_range = self.get_range("b")
         a_leveled = round(self.get_position("a")[AXIS], 2) > 0.15
         b_leveled = round(self.get_position("b")[AXIS], 2) > 0.15
-        return (a_fixed, b_fixed, lifted, rotated, a_leveled, b_leveled)
+        return (a_fixed, b_fixed, lifted, a_range, b_range, a_leveled, b_leveled)

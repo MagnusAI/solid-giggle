@@ -2,7 +2,7 @@
 <mujoco>
 	<!-- set options to simulate underwater environment -->
 	<option gravity="0 0 0" density="1025" viscosity=" 0.00125" />
-	<include file="robots/model_v3.xml" />
+	<include file="robots/model_v4.xml" />
 	<include file="walls/wall_90_40.xml" />
 	<include file="ground/floor.xml" />
 </mujoco>

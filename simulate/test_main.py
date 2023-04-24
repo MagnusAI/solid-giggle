@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from deep_ql_v2 import controller
+from controller_test import controller
 import os
 
 # Set path to XML file

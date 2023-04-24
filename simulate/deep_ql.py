@@ -11,7 +11,7 @@ state_space = list(itertools.product([False, True], repeat=6))
 
 # Define action space
 action_space = ['lift_a', 'lift_b', 'lower_a', 'lower_b',
-                'rotate_a_forward', 'rotate_b_forward', 'rotate_a_backward', 'rotate_b_backward']
+                'rotate_a_forward', 'rotate_b_forward', 'rotate_a_backward', 'rotate_b_backward', 'stop_a_rotation', 'stop_b_rotation']
 
 # State and action dimensions
 state_dim = len(state_space)
@@ -86,7 +86,7 @@ def get_reward(state, action, next_state):
             fix_reward += 1
         elif not next_state[1] and state[1] and state[5]:
             fix_reward -= 2
-        
+
         acc_reward = height_reward + fix_reward
 
         return acc_reward if acc_reward != 0 else -1
@@ -112,16 +112,13 @@ def controller(model, data):
     global robot, state, q_net, target_net, optimizer, epsilon, steps_done
     if (robot is None):
         robot = LappaApi(data)
-        q_net.load_state_dict(torch.load("q_net.pth"))
-        q_net.eval()  # set q_net to evaluation mode
-        return
         return
     else:
         robot.update_data(data)
 
     done = False
 
-    if (data.time > (36000)):
+    if (data.time > (60 * 5)):
         done = True
 
     if not done and not robot.locked:
@@ -139,10 +136,8 @@ def controller(model, data):
 
         if (next_state != state):
             robot.unlock()
-            print("Action: " + action, " State: " + str(state))
-            if (state[4] or state[5]):
-                print(
-                    "#####################################################################################")
+            print("Time: " + str(round(data.time, 0)), "State: " +
+                  str(state) + "    Action: " + action,)
 
         # Inside the controller function, after getting the next_state
         next_encoded_state = [float(s) for s in next_state]

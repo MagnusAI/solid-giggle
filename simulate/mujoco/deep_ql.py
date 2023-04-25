@@ -86,10 +86,10 @@ target_update = 10
 steps_done = 0
 robot = None
 state = (False, False, False, 0, 0, False, False)
-episodes = 1000
+episodes = 100
 action_idx = None
 stale_count = 0
-stale_limit = 100
+stale_limit = 500
 
 success_count = 0
 
@@ -130,12 +130,12 @@ def controller(model, data):
                     action_idx = torch.argmax(q_network(state_tensor)).item()
 
         action = action_space[action_idx]
-        robot.lock()
         next_state = perform_action(robot, action)
-
+        
+        robot.lock()
         if (next_state != state):
             robot.unlock()
-
+            
         if (not robot.is_locked() or stale_count == stale_limit):
             next_state_tensor = torch.tensor(
                 [next_state], dtype=torch.float32, device=device)
@@ -152,7 +152,7 @@ def controller(model, data):
                 reward -= revisit_penalty * (revisit_count - 1)
 
             if (stale_count == stale_limit):
-                reward -= 100
+                reward = -100
 
             reward_tensor = torch.tensor(
                 [reward], dtype=torch.float32, device=device).squeeze()
@@ -175,7 +175,7 @@ def controller(model, data):
                     success_count += 1
                     print("Success!", success_count)
                 episodes -= 1
-                print("Episode: ", episodes, "Reward: ", reward, " State: ", state, " Action: ", action, " Stale count: ", stale_count)
+                print("Episode: ", episodes, "Reward: ", reward, " State: ", next_state, " Action: ", action, " Stale count: ", stale_count)
                 stale_count = 0
                 robot.reset()
                 return

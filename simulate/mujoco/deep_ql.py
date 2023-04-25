@@ -18,8 +18,8 @@ state_space = list(itertools.product(
     [False, True],
     [False, True],
     [False, True],
-    [-1, 0, 5, 10, 15, 20, 25, 30],
-    [-1, 0, 5, 10, 15, 20, 25, 30],
+    [999, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 30],
+    [999, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 30],
     [False, True],
     [False, True]
 ))
@@ -49,63 +49,57 @@ def perform_action(robot, action):
     return next_state
 
 
+def should_reset(state, next_state):
+    if not next_state[0] and not next_state[1] and (state[0] or state[1]):
+        return True
+    if (state[3] > 900 and state[4] > 900):
+        return True
+    return False
+
+
 def get_reward(state, next_state):
-    goal_condition = (next_state[0] and next_state[1]
-                      and next_state[5] and next_state[6])
-    reset_condition = (
-        not next_state[0] and not next_state[1] and (state[0] or state[1])) or (not next_state[0] and not next_state[1] and next_state[3] > state[3] and next_state[4] > state[4])
+    a_fixed, b_fixed, lifted, a_distance, b_distance, a_leveled, b_leveled = state
+    next_a_fixed, next_b_fixed, next_lifted, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
 
-    if goal_condition:
-        return 100
-    elif reset_condition:
-        return -100
-    else:
-        if (not next_state[0] and not next_state[1]):
-            return -5
+    reward = -10
 
-        height_reward = 0
-        if next_state[5] and not state[5]:
-            height_reward += 10
-        elif not next_state[5] and state[5]:
-            height_reward -= 2
-        if next_state[6] and not state[6]:
-            height_reward += 10
-        elif not next_state[6] and state[6]:
-            height_reward -= 2
+    if (next_a_fixed or next_b_fixed):
+        reward += 10
 
-        fix_reward = 0
-        if (next_state[5]):
-            if next_state[0] and not state[0]:
-                fix_reward += 1
-            elif not next_state[0] and state[0]:
-                fix_reward -= 1
-        if (next_state[6]):        
-            if next_state[1] and not state[1]:
-                fix_reward += 1
-            elif not next_state[1] and state[1]:
-                fix_reward -= 1
-
-        acc = height_reward + fix_reward
-
-        return acc - 1
+    if (next_a_fixed):
+        reward += next_b_distance - b_distance
+    elif (next_b_fixed):
+        reward += next_a_distance - a_distance
+    
+    if (next_lifted):
+        reward += 100
+    
+    return reward
 
 
 # Define the hyperparameters
-learning_rate = 0.001
+learning_rate = 0.5
 gamma = 0.9
 epsilon = 0.9  # Exploration rate (epsilon-greedy)
 epsilon_decay = 0.999
 target_update = 10
 steps_done = 0
 robot = None
-state = (False, False, False, 5, 5, False, False)
+state = (False, False, False, 0, 0, False, False)
 episodes = 1000
+action_idx = None
 stale_count = 0
-stale_limit = 1000
+stale_limit = 100
+
+success_count = 0
+
+state_history = []
+state_history_limit = 10
+revisit_penalty = 20
 
 
 def controller(model, data):
-    global robot, state, q_network, target_network, optimizer, epsilon, episodes, steps_done, stale_count, stale_limit
+    global robot, state, q_network, target_network, optimizer, epsilon, episodes, steps_done, action_idx, stale_count, stale_limit, success_count, state_history, state_history_limit, revisit_penalty
 
     if (robot is None):
         robot = LappaApi(data)
@@ -128,58 +122,78 @@ def controller(model, data):
         state_tensor = torch.tensor(
             [state], dtype=torch.float32, device=device)
 
-        if np.random.rand() < epsilon:
-            action_idx = np.random.choice(action_dimensions)
-        else:
-            with torch.no_grad():
-                action_idx = torch.argmax(q_network(state_tensor)).item()
+        if (not robot.is_locked()):
+            if np.random.rand() < epsilon:
+                action_idx = np.random.choice(action_dimensions)
+            else:
+                with torch.no_grad():
+                    action_idx = torch.argmax(q_network(state_tensor)).item()
 
         action = action_space[action_idx]
+        robot.lock()
         next_state = perform_action(robot, action)
 
-        # increment the stale count if the state is the same
-        if (state == next_state):
+        if (next_state != state):
+            robot.unlock()
+
+        if (not robot.is_locked() or stale_count == stale_limit):
+            next_state_tensor = torch.tensor(
+                [next_state], dtype=torch.float32, device=device)
+
+            reward = get_reward(state, next_state)
+
+            # Penalize revisiting states
+            state_history.append((state, reward))
+            if len(state_history) > state_history_limit:
+                state_history.pop(0)
+
+            revisit_count = sum(1 for s, r in state_history if s == next_state)
+            if revisit_count > 1:
+                reward -= revisit_penalty * (revisit_count - 1)
+
+            if (stale_count == stale_limit):
+                reward -= 100
+
+            reward_tensor = torch.tensor(
+                [reward], dtype=torch.float32, device=device).squeeze()
+
+            current_q_value = q_network(state_tensor)[0][action_idx]
+            with torch.no_grad():
+                next_q_value = torch.max(target_network(next_state_tensor))
+            expected_q_value = reward_tensor + gamma * next_q_value
+
+            loss = loss_fn(current_q_value, expected_q_value)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            epsilon *= epsilon_decay
+            state = next_state
+
+            if (reward == 100 or reward == -100):
+                if (reward == 100):
+                    success_count += 1
+                    print("Success!", success_count)
+                episodes -= 1
+                print("Episode: ", episodes, "Reward: ", reward, " State: ", state, " Action: ", action, " Stale count: ", stale_count)
+                stale_count = 0
+                robot.reset()
+                return
+
+            steps_done += 1
+            if (steps_done % target_update == 0):
+                target_network.load_state_dict(q_network.state_dict())
+
+        else:
             stale_count += 1
-
-        next_state_tensor = torch.tensor(
-            [next_state], dtype=torch.float32, device=device)
-
-        reward = get_reward(state, next_state)
-
-        if (stale_count > stale_limit):
-            reward = -100
-
-        reward_tensor = torch.tensor(
-            [reward], dtype=torch.float32, device=device).squeeze()
-
-        current_q_value = q_network(state_tensor)[0][action_idx]
-        with torch.no_grad():
-            next_q_value = torch.max(target_network(next_state_tensor))
-        expected_q_value = reward_tensor + gamma * next_q_value
-
-        loss = loss_fn(current_q_value, expected_q_value)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        epsilon *= epsilon_decay
-        state = next_state
-
-        if (reward == 100 or reward == -100):
-            episodes -= 1
-            stale_count = 0
-            robot.reset()
-            return
-
-        steps_done += 1
-        if (steps_done % target_update == 0):
-            target_network.load_state_dict(q_network.state_dict())
-
-        robot.debug_info()
-        print("Episode: ", episodes)
-        print("Action: ", action)
-        print("Reward: ", reward)
-        print("Stale Count: ", stale_count)
+        # if (action_idx != success_count):
+        #     robot.debug_info()
+        #     print("Epsilon: ", epsilon)
+        #     print("Episode: ", episodes)
+        #     print("Action: ", action)
+        #     print("Stale count: ", stale_count)
+        #     print("Locked: ", robot.is_locked())
+        #     success_count = action_idx
 
     else:
         # Save Q-network to a file

@@ -9,7 +9,7 @@ class LappaApi(InterfaceLappaApi):
         self.data = data
         self.locked = False
 
-    def locked(self):
+    def is_locked(self):
         return self.locked
 
     def lock(self):
@@ -222,19 +222,29 @@ class LappaApi(InterfaceLappaApi):
         range = self.get_range(module)
 
         if (range < -99):
-            return -1
-        elif (range < 0.5):
+            return 999
+        elif (range <= 0.5):
             return 0
-        elif (range < 5):
-            return 5
-        elif (range < 10):
+        elif (range <= 2):
+            return 2
+        elif (range <= 4):
+            return 4
+        elif (range <= 6):
+            return 6
+        elif (range <= 8):
+            return 8
+        elif (range <= 10):
             return 10
-        elif (range < 15):
-            return 15
-        elif (range < 20):
+        elif (range <= 12):
+            return 12
+        elif (range <= 14):
+            return 14
+        elif (range <= 16):
+            return 16
+        elif (range <= 18):
+            return 18
+        elif (range <= 20):
             return 20
-        elif (range < 25):
-            return 25
         else:
             return 30
 

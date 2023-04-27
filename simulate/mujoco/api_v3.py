@@ -35,6 +35,7 @@ class LappaApi(InterfaceLappaApi):
             "a"), " , ", self.get_h1_actuator("b"))
         print("Range: ", round(self.get_range("a"), 2),
               " , ", round(self.get_range("b"), 2))
+        print("Position", round(self.get_position("a")[AXIS], 2), round(self.get_position("b")[AXIS], 2))
 
     def update_data(self, data):
         self.data = data
@@ -113,15 +114,14 @@ class LappaApi(InterfaceLappaApi):
         self.set_thruster("b", 0)
         self.reset_module("a")
         self.reset_module("b")
-        self.data.qpos[:] = 0
-        self.data.qpos[2] = 0.15
+        self.data.qpos = [0, 0, 0.13, 0, 0, 0, 0, 0, 0, 0,0,0]
         self.data.qvel[:] = 0
         self.data.qacc[:] = 0
         pass
 
     def lift(self, module):
         self.set_adhesion(module, 0)
-        self.set_thruster(module, .2)
+        self.set_thruster(module, .25)
         self.reset_module(module)
 
     def lower(self, module):
@@ -202,13 +202,26 @@ class LappaApi(InterfaceLappaApi):
             print("Unknown action: " + action)
         self.update_pressure()
 
-    def is_lifted(self):
+    def get_arm_angle(self):
         a_h2 = self.get_h2("a")
         b_h2 = self.get_h2("b")
         acc = a_h2 + b_h2
-        offset = 5
-        return acc > (45 - offset)
 
+        if acc > 80:
+            return 90
+        elif acc > 65:
+            return 75
+        elif acc > 50:
+            return 60
+        elif acc > 35:
+            return 45
+        elif acc > 20:
+            return 30
+        elif acc > 10:
+            return 15
+        else:
+            return 0
+    
     def is_rotated(self):
         a_h1 = self.get_h1("a")
         b_h1 = self.get_h1("b")
@@ -247,14 +260,14 @@ class LappaApi(InterfaceLappaApi):
             return 20
         else:
             return 30
-
+        
     def read_state_from_sensors(self):
         global AXIS
         a_fixed = self.get_pressure("a") > 45
         b_fixed = self.get_pressure("b") > 45
-        lifted = self.is_lifted()
+        arm_angle = self.get_arm_angle()
         a_range = self.get_distance("a")
         b_range = self.get_distance("b")
         a_leveled = round(self.get_position("a")[AXIS], 2) > 0.15
         b_leveled = round(self.get_position("b")[AXIS], 2) > 0.15
-        return (a_fixed, b_fixed, lifted, a_range, b_range, a_leveled, b_leveled)
+        return (a_fixed, b_fixed, arm_angle, a_range, b_range, a_leveled, b_leveled)

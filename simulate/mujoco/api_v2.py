@@ -252,9 +252,8 @@ class LappaApi(InterfaceLappaApi):
         global AXIS
         a_fixed = self.get_pressure("a") > 45
         b_fixed = self.get_pressure("b") > 45
-        lifted = self.is_lifted()
         a_range = self.get_distance("a")
         b_range = self.get_distance("b")
         a_leveled = round(self.get_position("a")[AXIS], 2) > 0.15
         b_leveled = round(self.get_position("b")[AXIS], 2) > 0.15
-        return (a_fixed, b_fixed, lifted, a_range, b_range, a_leveled, b_leveled)
+        return (a_fixed, b_fixed, a_range, b_range, a_leveled, b_leveled)

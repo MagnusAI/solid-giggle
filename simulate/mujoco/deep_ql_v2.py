@@ -1,6 +1,4 @@
-# Deep Q-Learning implementation for the Lappa robot.
-
-from api import *
+from api_v2 import *
 from dqn import DQN
 import itertools
 import torch
@@ -15,7 +13,6 @@ action_space = ['lift_a', 'lift_b', 'lower_a', 'lower_b',
 
 # Define the state space
 state_space = list(itertools.product(
-    [False, True],
     [False, True],
     [False, True],
     [999, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 30],
@@ -42,24 +39,18 @@ target_network.eval()
 optimizer = optim.Adam(q_network.parameters(), lr=1e-3)
 loss_fn = nn.MSELoss()
 
-
-def perform_action(robot, action):
-    robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
-    return next_state
-
-
-def should_reset(state, next_state):
-    if not next_state[0] and not next_state[1] and (state[0] or state[1]):
-        return True
-    if (state[3] > 900 and state[4] > 900):
-        return True
-    return False
-
+def load_network():
+    global q_network
+    try:
+        q_network.load_state_dict(torch.load(
+            'q_network.pth', map_location=device))
+        print('Loaded network from disk')
+    except:
+        pass
 
 def get_reward(state, next_state):
-    a_fixed, b_fixed, lifted, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_lifted, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, a_distance, b_distance, a_leveled, b_leveled = state
+    next_a_fixed, next_b_fixed, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
 
     fixed = a_fixed or b_fixed
     leveled = a_leveled and b_leveled
@@ -72,47 +63,57 @@ def get_reward(state, next_state):
     rising = a_distance < next_a_distance or b_distance < next_b_distance
     falling = a_distance > next_a_distance or b_distance > next_b_distance
 
+    # Reward for fixing both modules on the wall
     if (next_a_fixed and next_b_fixed and leveled):
         return 100
-
-    if (not fixed and falling and not rising):
-        return 1
-    elif (not fixed and not next_fixed):
+    
+    # Punishment for entering a state where both modules are unfixed
+    if (fixed and not next_fixed):
         return -100
-    elif (fixed and rising and not half_leveled):
-        return 1
-    elif (fixed and next_half_leveled and falling):
-        return 1
-    elif (fixed and next_half_leveled and rising):
-        return -1
-    elif (next_half_leveled and ((next_a_fixed and not a_fixed) or (next_b_fixed and not b_fixed))):
-        return 1
-    elif (half_leveled and (a_fixed and b_fixed) and ((a_leveled and not next_b_fixed) or (b_leveled and not next_a_fixed))):
-        return 1
-    elif (half_leveled and fixed and next_leveled):
-        return 0
-    elif (leveled and not next_leveled):
-        return -1
-    elif (leveled and falling):
-        return 1
-    else:
-        if (not fixed and next_fixed):
-            return 1
-        elif (fixed and not next_fixed):
-            return -100
-        else:
-            if (fixed and next_half_leveled and not half_leveled):
-                return 1
-            elif (fixed and not next_half_leveled and half_leveled and not next_leveled):
-                return -1
+    
+    if (not fixed and (next_a_distance > 30 or next_b_distance > 30)):
+        return -100
 
-            if (fixed and next_half_leveled and falling):
-                return 1
-            elif (fixed and next_half_leveled and rising):
-                return -1
+    # Reward for fixating a module when floating
+    if (not fixed and next_fixed):
+        return 1
 
+    # Reward for reaching half-leveled state
+    if (not half_leveled and next_half_leveled):
+        return 10
+    
+    # Punishment for leaving half-leveled
+    if (half_leveled and not next_half_leveled):
+        return -10
+
+    # Reward for fixing a module on the wall
+    if (fixed and next_half_leveled and ((next_a_fixed and not a_fixed) or (next_b_fixed and not b_fixed))):
+        return 10
+    
+    # Punishment for releasing a module from the wall
+    if (((not next_a_fixed and a_fixed and a_leveled) or (not next_b_fixed and b_fixed and b_leveled))):
+        return -10
+    
+    # Reward for releasing a module from ground when th other has been fixed on the wall
+    if (a_fixed and b_fixed and half_leveled and ((not a_leveled and not next_a_fixed) or (not b_leveled and not next_b_fixed))):
+        return 1
+    
+    # Reward and punishement for entering and leaving the leveled state
+    if (not leveled and next_leveled):
+        return 10
+    elif ( leveled and not next_leveled):
+        return -10
+
+    # Reward for moving closer to the wall with the unfixed modules while leveled
+    if (fixed and leveled and falling):
+        return 1
+    
     return -1
 
+def perform_action(robot, action):
+    robot.perform_action(action)
+    next_state = robot.read_state_from_sensors()
+    return next_state
 
 # Define the hyperparameters
 learning_rate = 0.1
@@ -121,43 +122,32 @@ epsilon = 0.9  # Exploration rate (epsilon-greedy)
 epsilon_decay = 0.999
 target_update = 10
 steps_done = 0
+episodes = 5000
+
+done = False
 robot = None
-state = (False, False, False, 0, 0, False, False)
-episodes = 10
+actions = []
 action_idx = None
 stale_count = 0
-stale_limit = 10
+stale_limit = 100
+state = (False, False, 0, 0, False, False)  # init_state
+sensor_delay = 0  # Wait for sensors data to be updated
 
-success_count = 0
 score = 0
-#high_sscore starts at lowest int value
-high_score = float('-inf')
-actions = []
-scores = []
+highscore = float('-inf')
+rewards = []
 
-state_history = []
-state_history_limit = 10
-revisit_penalty = 20
-
-sensor_delay = 0  # Wait for sensors to update
-
+# todo = [3,6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 2]
 
 def controller(model, data):
-    global robot, state, q_network, target_network, optimizer, epsilon, episodes, steps_done, action_idx, stale_count, stale_limit, success_count, score, high_score, actions, state_history, state_history_limit, revisit_penalty, sensor_delay, scores
+    global robot, actions, action_idx, stale_count, stale_limit, state, sensor_delay, score, done, steps_done, episodes, epsilon, epsilon_decay, target_update, target_network, q_network, optimizer, loss_fn, highscore, rewards
 
     if (robot is None):
         robot = LappaApi(data)
-        try:
-            q_network.load_state_dict(torch.load(
-                'q_network.pth', map_location=device))
-            print('Loaded network from disk')
-        except:
-            pass
+        load_network()
         return
     else:
         robot.update_data(data)
-
-    done = False
 
     if (episodes <= 0):
         done = True
@@ -189,22 +179,12 @@ def controller(model, data):
             if (not robot.is_locked() or stale_count == stale_limit):
                 next_state_tensor = torch.tensor(
                     [next_state], dtype=torch.float32, device=device)
-
+                
                 reward = get_reward(state, next_state)
-
-                # Penalize revisiting states
-                state_history.append((state, reward))
-                if len(state_history) > state_history_limit:
-                    state_history.pop(0)
-
-                revisit_count = sum(
-                    1 for s, r in state_history if s == next_state)
-                if revisit_count > 1:
-                    reward -= revisit_penalty * (revisit_count - 1)
 
                 if (stale_count == stale_limit):
                     reward = -100
-
+                
                 reward_tensor = torch.tensor(
                     [reward], dtype=torch.float32, device=device).squeeze()
 
@@ -221,38 +201,37 @@ def controller(model, data):
                 epsilon *= epsilon_decay
                 state = next_state
 
-                score += reward
-                scores.append(reward)
+                rewards.append(reward)
                 actions.append(action)
+                score += reward
 
                 if (reward == 100 or reward == -100):
-                    if (reward == 100):
-                        success_count += 1
+                    print("-------------------------------------------------------------------------------------------")
+                    print("Episode", episodes)
+                    print("Epsilon:", epsilon)
+                    print("Stale count:", stale_count)
+                    print("Score:", score, "Highscore:", highscore)
+                    print("State:", state)
+                    print("Actions:", actions)
+                    print("Rewards:", rewards)
+                    robot.debug_info()
+
                     episodes -= 1
-                    print(
-                        "-----------------------------------------------------------------------------------------------------------------------")
-                    print("Actions: ", actions)
-                    print("State: ", state)
-                    print("Episode:", episodes)
-                    print("scores:", scores)
-                    print("Highscore:", high_score)
-                    print("Stale count: ", stale_count)
-                    if (score > high_score):
-                        high_score = score
-                    score = 0
+                    highscore = max(highscore, score)
                     actions = []
-                    scores = []
+                    rewards = []
+                    stale_count = 0
+                    score = 0
                     robot.reset()
                     return
-
+                
                 steps_done += 1
                 if (steps_done % target_update == 0):
                     target_network.load_state_dict(q_network.state_dict())
-
         else:
-            print("Success rate: ", success_count /
-                  100, "Highscore: ", high_score)
-            # Save Q-network to a file
-            
+            # Save the network
+            filename = "q_network.pth"
+            torch.save(q_network.state_dict(), filename)
+            sys.exit(0)
     else:
         sensor_delay -= 1

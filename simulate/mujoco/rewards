@@ -1,0 +1,94 @@
+def get_reward(state, next_state):
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+
+    fixed = a_fixed or b_fixed
+    leveled = a_leveled and b_leveled
+    half_leveled = a_leveled or b_leveled
+
+    next_fixed = next_a_fixed or next_b_fixed
+    next_leveled = next_a_leveled and next_b_leveled
+    next_half_leveled = next_a_leveled or next_b_leveled
+
+    tipping = arm_angle < next_arm_angle
+    untipping = arm_angle > next_arm_angle
+    angled = arm_angle == 90
+    next_angled = next_arm_angle == 90
+    rising = a_distance < next_a_distance or b_distance < next_b_distance
+    falling = a_distance > next_a_distance or b_distance > next_b_distance
+
+    leveled_fixed = (a_leveled and a_fixed) or (b_leveled and b_fixed)
+
+    # Fixating a module
+    if ((not a_fixed and next_a_fixed) or (not b_fixed and next_b_fixed)):
+        # print("fixating a module")
+        if (not fixed):
+            return 1
+        else:
+            a_module = (not a_fixed and next_a_fixed)
+            b_module = (not b_fixed and next_b_fixed)
+            if ((a_module and next_a_leveled) or (b_module and next_b_leveled)):
+                return 10
+            else:
+                return -10
+
+    # Unfixating a module
+    if ((a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed)):
+        # print("unfixating a module")
+        if (not next_fixed):
+            return -100
+        else:
+            a_module = (a_fixed and not next_a_fixed)
+            b_module = (b_fixed and not next_b_fixed)
+            if ((a_module and not a_leveled) or (b_module and not b_leveled)):
+                return 1
+            else:
+                return -100
+
+    # Lifting a module
+    if (rising or tipping):
+        # print("lifting a module")
+        if (not fixed):
+            if (a_distance == 999 and b_distance == 999):
+                return -100
+            else:
+                return -1
+        else:
+            if (not leveled_fixed):
+                if (not angled):
+                    return 1
+                else:
+                    if (rising):
+                        return -1
+            else:
+                if (leveled):
+                    return -10
+                else:
+                    return 1
+
+    # Lowering a module
+    if (falling or untipping):
+        #print("lowering a module")
+        if (not fixed):
+            return 1
+        else:
+            if (not leveled_fixed):               
+                if (half_leveled and not next_half_leveled):
+                    return -10
+                if (angled and half_leveled and (next_a_distance < 16 and next_b_distance < 16)):
+                    return 1
+            else:
+                if (leveled):
+                    return 1
+                else:
+                    return -10
+
+    # Leveling a module
+    if ((not leveled and next_leveled) or (not half_leveled and next_half_leveled)):
+        # print("leveling a module")
+        return 10
+    elif ((leveled and not next_leveled) or (half_leveled and not next_half_leveled)):
+        # print("unleveling a module")
+        return -100
+
+    return -1

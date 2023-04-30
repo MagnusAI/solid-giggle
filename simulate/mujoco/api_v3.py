@@ -191,12 +191,16 @@ class LappaApi(InterfaceLappaApi):
             self.stop_rotation("b")
             self.lower("b")
         elif action == "rotate_a_forward":
+            self.set_thruster("b", 0)
             self.rotate_forward("a")
         elif action == "rotate_a_backward":
+            self.set_thruster("b", 0)
             self.rotate_backward("a")
         elif action == "rotate_b_forward":
+            self.set_thruster("a", 0)
             self.rotate_forward("b")
         elif action == "rotate_b_backward":
+            self.set_thruster("a", 0)
             self.rotate_backward("b")
         else:
             print("Unknown action: " + action)

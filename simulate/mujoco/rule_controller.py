@@ -72,7 +72,7 @@ def phase_three(state):
         phase = 2
         return phase_two(state)
     else:
-        if (b_distance > 10):
+        if (b_distance > 30):
             return 'rotate_a_backward'
         else:
             phase = 4
@@ -80,7 +80,7 @@ def phase_three(state):
 
 
 def phase_four(state):
-    global phase
+    global phase, action
     a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
     fixed = a_fixed or b_fixed
     angled = arm_angle == 90
@@ -92,6 +92,12 @@ def phase_four(state):
         phase = 3
         return phase_three(state)
     else:
+        if (b_distance == 999):
+            return 'rotate_a_forward'
+        if (action == 'rotate_a_forward'):
+            return 'lower_b'
+        if (b_distance > 20):     # Try to change this to values between 0 and 30
+            return 'rotate_a_backward'
         if (not b_fixed):
             return 'lower_b'
         else:
@@ -131,8 +137,13 @@ def phase_six(state):
     elif (leveled and a_distance > 30):
         return 'lower_a'
 
-    return 'rotate_b_backward'
+    return 'rotate_b_forward'
 
+
+def perform_action(robot, action):
+    robot.perform_action(action)
+    next_state = robot.read_state_from_sensors()
+    return next_state
 
 def stop():
     sys.exit(0)
@@ -154,10 +165,10 @@ def controller(model, data):
             print("Action:", action)
 
         if (action == 'stop'):
+            print("Time to complete:", round(data.time, 2), "seconds")
             stop()
 
-        robot.perform_action(action)
-        next_state = robot.read_state_from_sensors()
+        next_state = perform_action(robot, action)
         sensor_delay = 1
 
         robot.lock()
@@ -170,10 +181,10 @@ def controller(model, data):
             actions.append(action)
 
             # Debug info
-
             robot.debug_info()
             print("State: ", robot.read_state_from_sensors())
             print("Actions: ", actions)
+            print("Phase: ", phase)
             print("___________________________________________________________")
     else:
         sensor_delay -= 1

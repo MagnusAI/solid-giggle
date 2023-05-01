@@ -1,4 +1,4 @@
-from api_v3 import *
+from api_v35 import *
 from dqn import DQN
 import itertools
 import torch
@@ -53,19 +53,15 @@ def load_network():
 
 def get_reward(state, next_state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
 
     if (phase == 0):
         return phase_zero(state, next_state)
     elif (phase == 1):
         return phase_one(state, next_state)
-    elif (phase == 2):
-        return phase_two(state, next_state)
     else:
         raise ValueError("Invalid phase")
 
-
+# Attach to the ground
 def phase_zero(state, next_state):
     global phase
     a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
@@ -78,7 +74,7 @@ def phase_zero(state, next_state):
     rising = a_distance < next_a_distance or b_distance < next_b_distance
     falling = a_distance > next_a_distance or b_distance > next_b_distance
 
-    modifier = 1
+    modifier = .5
     if (not fixed):
         if (next_fixed):
             phase = 1
@@ -87,7 +83,6 @@ def phase_zero(state, next_state):
             if (next_a_distance > 30 and next_b_distance > 30):
                 return -100
             if ((falling or untipping) and not (rising or tipping)):
-                modifier = 0.75
                 return -1 * modifier
             return -1
     else:
@@ -97,74 +92,27 @@ def phase_zero(state, next_state):
             phase = 1
             return 0
 
-
+# get leveled
 def phase_one(state, next_state):
     global phase
     a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
     next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
 
     fixed = a_fixed or b_fixed
-    leveled = a_leveled and b_leveled
-    half_leveled = a_leveled or b_leveled
-
     next_fixed = next_a_fixed or next_b_fixed
-    next_leveled = next_a_leveled and next_b_leveled
-    next_half_leveled = next_a_leveled or next_b_leveled
-
-    tipping = arm_angle < next_arm_angle
-    untipping = arm_angle > next_arm_angle
-    angled = arm_angle == 90
-    next_angled = next_arm_angle == 90
     rising = a_distance < next_a_distance or b_distance < next_b_distance
-    falling = a_distance > next_a_distance or b_distance > next_b_distance
+    tipping = arm_angle < next_arm_angle
+    half_leveled = a_leveled or b_leveled
+    next_half_leveled = next_a_leveled or next_b_leveled
+    next_angled = next_arm_angle == 90
 
-    leveled_fixed = (a_leveled and a_fixed) or (b_leveled and b_fixed)
-
-    modifier = 0.5
     if (next_fixed):
         if (next_angled):
-            phase = 2
-            return 10
-        if (not half_leveled and next_half_leveled):
-            return 2
-        if (rising or tipping):
-            return -1 * modifier
-        return -1
-    else:
-        return -100
-
-
-def phase_two(state, next_state):
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
-
-    fixed = a_fixed or b_fixed
-    leveled = a_leveled and b_leveled
-    half_leveled = a_leveled or b_leveled
-
-    next_fixed = next_a_fixed or next_b_fixed
-    next_leveled = next_a_leveled and next_b_leveled
-    next_half_leveled = next_a_leveled or next_b_leveled
-
-    tipping = arm_angle < next_arm_angle
-    untipping = arm_angle > next_arm_angle
-    angled = arm_angle == 90
-    next_angled = next_arm_angle == 90
-    rising = a_distance < next_a_distance or b_distance < next_b_distance
-    falling = a_distance > next_a_distance or b_distance > next_b_distance
-
-    leveled_fixed = (a_leveled and a_fixed) or (b_leveled and b_fixed)
-
-    modifier = 0.5
-    if (fixed and half_leveled):
-        if (next_a_fixed and next_b_fixed):
             return 100
-        if (next_angled and (falling or untipping)):
+        if (rising or tipping):
             return 1
-        if (next_angled and (rising or tipping)):
+        if (not half_leveled):
             return -5
-        if (next_half_leveled and (a_distance < 30 and b_distance < 30) and (falling or untipping)):
-            return -1 * modifier
         return -1
     else:
         return -100
@@ -190,14 +138,14 @@ robot = None
 actions = []
 action_idx = None
 stale_count = 0
-stale_limit = 5000
+stale_limit = 100
 state = (False, False, 0, 0, 0, False, False)  # initial state
 sensor_delay = 0  # Wait for sensors data to be updated
 
 score = 0
 highscore = float('-inf')
 rewards = []
-network_name = "q_network_v3_phase_zero.pth"
+network_name = "q_network_v35.pth"
 time_limit = 10  # seconds
 episode_start_time = 0
 
@@ -205,11 +153,6 @@ state_history = []
 state_history_limit = 10
 success = 0
 phase = 0
-
-# todo = [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6,
-#         6, 6, 6, 3, 3, 3, 3, 3, 3, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 4]
-
-# todo.reverse()
 
 
 def controller(model, data):
@@ -221,10 +164,6 @@ def controller(model, data):
         return
     else:
         robot.update_data(data)
-        if (phase == 2):
-            epsilon = 0.75
-        else:
-            epsilon = 0.15
 
     if (episodes <= 0):
         done = True
@@ -312,6 +251,7 @@ def controller(model, data):
                     score = 0
                     phase = 0
                     robot.reset()
+                    state = (False, False, 0, 0, 0, False, False)
                     return
 
                 steps_done += 1
@@ -326,7 +266,6 @@ def controller(model, data):
             sys.exit(0)
     else:
         sensor_delay -= 1
-
 
 def print_info(robot, episodes, epsilon, stale_count, score, highscore, actions, rewards):
     robot.debug_info()

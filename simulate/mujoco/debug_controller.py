@@ -1,22 +1,20 @@
 import os
 import sys
-from api_v3 import *
-from deep_ql_v3 import get_reward, perform_action
+from api_v35 import *
+from deep_ql_v35 import get_reward, perform_action
 
 robot = None
 actions = []
 action_space = ['lift_a', 'lift_b', 'lower_a', 'lower_b',
                 'rotate_a_forward', 'rotate_b_forward', 'rotate_a_backward', 'rotate_b_backward']
 actions_idx = None
+action = None
 stale_count = 0
 stale_limit = 5000
 state = (False, False, 0, 0, 0, False, False)  # init_state
 sensor_delay = 0  # Wait for sensors data to be updated
 
-# todo = [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6,
-#        6, 6, 6, 3, 3, 3, 3, 3, 3, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 4]
-#todo = [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6 ,6 ,6 ,6 ,3, 3,3,3,3,3,0, 7 ]
-todo = [5,3,5]
+todo = ['lower_a', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b', 'lift_b']
 score = 0
 done = False
 
@@ -26,11 +24,12 @@ def stop():
 
 
 def controller(model, data):
-    global robot, state, action_idx, stale_count, stale_limit, actions, todo, score, sensor_delay, done
+    global robot, state, action, stale_count, stale_limit, actions, score, sensor_delay, done, todo
 
     if (robot is None):
         robot = LappaApi(data)
         todo.reverse()
+        robot.unlock()
         return
     else:
         robot.update_data(data)
@@ -38,9 +37,9 @@ def controller(model, data):
     if (sensor_delay == 0):
         if (not done):
             if (not robot.is_locked()):
-                action_idx = todo.pop()
+                action = todo.pop()
+                print("Action:", action)
 
-            action = action_space[action_idx]
             next_state = perform_action(robot, action)
             stale_count += 1
             sensor_delay = 1
@@ -86,7 +85,7 @@ def controller(model, data):
                 if (reward == 100 or reward == -100):
                     print("Stopped due to reward", reward,
                           "Stale count:", stale_count)
-                    stop()
+                    # stop()
         else:
             # sys.exit(0)
             pass

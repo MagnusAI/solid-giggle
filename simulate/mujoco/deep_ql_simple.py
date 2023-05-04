@@ -51,119 +51,140 @@ def load_network():
         pass
 
 
+# def get_reward(state, next_state):
+#     a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+#     next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+
+#     fixed = a_fixed and b_fixed
+#     next_fixed = next_a_fixed and next_b_fixed
+#     leveled = a_leveled and b_leveled
+#     next_leveled = next_a_leveled and next_b_leveled
+#     half_leveled = a_leveled or b_leveled
+#     next_half_leveled = next_a_leveled or next_b_leveled
+#     rising = a_distance < next_a_distance or b_distance < next_b_distance or arm_angle < next_arm_angle
+#     falling = a_distance > next_a_distance or b_distance > next_b_distance or arm_angle > next_arm_angle
+#     angled = arm_angle == 90
+#     next_angled = next_arm_angle == 90
+
+#     if (next_a_distance > 30 and next_b_distance > 30):
+#         return -100
+
+#     modifier = .25
+#     reward = -1
+
+#     if ((next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)):
+#         reward += 6
+
+#     if ((a_fixed and a_leveled and not next_a_fixed) or (b_fixed and b_leveled and not next_b_fixed)):
+#         return -100
+
+#     if ((a_fixed and b_fixed) and (not next_a_fixed or not next_b_fixed)):
+#         reward += 2
+
+#     if (not fixed):
+#         if (next_fixed):
+#             reward += 6
+#         else:
+#             if (falling):
+#                 if (not rising):
+#                     reward += 2
+#     else:
+#         if (not next_fixed):
+#             return -100
+#         else:
+#             if (half_leveled):
+#                 if (next_leveled):
+#                     if (next_a_fixed and next_b_fixed):
+#                         return 100
+#                     else:
+#                         if (falling):
+#                             reward *= modifier
+#                 else:
+#                     if (not next_half_leveled):
+#                         reward -= 4
+#             else:
+#                 if (next_half_leveled):
+#                     reward += 2
+#                 else:
+#                     if (rising):
+#                         reward *= modifier
+
+#     return reward
+
 def get_reward(state, next_state):
-    global phase
-
-    if (phase == 0):
-        return phase_zero(state, next_state)
-    elif (phase == 1):
-        return phase_one(state, next_state)
-    elif (phase == 2):
-        return phase_two(state, next_state)
-    elif (phase == 3):
-        return phase_three(state, next_state)
-    else:
-        raise ValueError("Invalid phase")
-
-# Attach to the ground
-
-
-def phase_zero(state, next_state):
-    global phase
+    global stage
     a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
     next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
 
-    fixed = a_fixed or b_fixed
-    next_fixed = next_a_fixed or next_b_fixed
-    tipping = arm_angle < next_arm_angle
-    untipping = arm_angle > next_arm_angle
-    rising = a_distance < next_a_distance or b_distance < next_b_distance
-    falling = a_distance > next_a_distance or b_distance > next_b_distance
+    goal_condition = next_a_fixed and next_b_fixed and next_a_leveled and next_b_leveled
 
-    modifier = .5
-    if (not fixed):
-        if (next_fixed):
-            phase = 1
-            return 10
-        else:
-            if (next_a_distance > 30 and next_b_distance > 30):
-                return -100
-            if ((falling or untipping) and not (rising or tipping)):
-                return -1 * modifier
-            return -1
-    else:
-        if (not next_fixed):
-            return -100
-        else:
-            phase = 1
-            return 0
+    if (goal_condition):
+        return 100
 
-# get angled
+    reward = 0
 
-
-def phase_one(state, next_state):
-    global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
-
-    fixed = a_fixed or b_fixed
-    next_fixed = next_a_fixed or next_b_fixed
-    rising = a_distance < next_a_distance or b_distance < next_b_distance
-    tipping = arm_angle < next_arm_angle
-    half_leveled = a_leveled or b_leveled
-    next_half_leveled = next_a_leveled or next_b_leveled
-    next_angled = next_arm_angle == 90
-
-    if (fixed and next_fixed):
-        if (next_angled):
-            phase = 2
-            return 100
-        if (rising or tipping):
-            return 1
-        if (not half_leveled):
-            return -5
-        return -1
-    else:
+    # Punish for unfixating a module that is leveled (Great punish) or if the other module is not fixated (great punish)
+    if (a_fixed and not next_a_fixed and (not b_fixed or b_leveled)) or (b_fixed and not next_b_fixed and (not a_fixed or a_leveled)):
         return -100
 
-
-def phase_two(state, next_state):
-    global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
-
-    fixed = a_fixed or b_fixed
-    falling = a_distance > next_a_distance or b_distance > next_b_distance
-    rising = a_distance < next_a_distance or b_distance < next_b_distance
-    untipping = arm_angle > next_arm_angle
-    angled = arm_angle == 90
-    next_half_leveled = next_a_leveled or next_b_leveled
-
-
-
-
-def phase_three(state, next_state):
-    global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
-
-    fixed = a_fixed or b_fixed
-    next_fixed = next_a_fixed or next_b_fixed
-    falling = a_distance > next_a_distance or b_distance > next_b_distance
-    rising = a_distance < next_a_distance or b_distance < next_b_distance
-    untipping = arm_angle > next_arm_angle
-    angled = arm_angle == 90
-    next_half_leveled = next_a_leveled or next_b_leveled
-    next_leveled = next_a_leveled and next_b_leveled
-
-    if (next_fixed):
-        if (next_leveled):
-            return 100
-        if ((not next_a_fixed and next_a_leveled) or (not next_b_fixed and next_b_leveled)):
-            return 10
-        return -1
-    else:
+    if (next_a_distance > 30 and next_b_distance > 30):
         return -100
+
+    # Reward for fixating a module (medium reward)
+    if (not a_fixed and next_a_fixed) or (not b_fixed and next_b_fixed):
+        if (stage == 0):
+            return 100
+        reward += 1
+
+    # Reward for fixating a module that is leveled (Great reward)
+    if (not a_leveled and next_a_leveled) or (not b_leveled and next_b_leveled):
+        if (stage == 2):
+            return 100
+        reward += 2
+
+    # Reward for unfixating a module if the other module is fixated and leveled (small)
+    if (a_fixed and b_leveled and not next_a_fixed) or (b_fixed and a_leveled and not next_b_fixed):
+        reward += 0.5
+
+    # Punish for fixating a module that isn’t leveled if the other module if fixated and leveled (small punish)
+    if (a_fixed and b_leveled and not a_leveled) or (b_fixed and a_leveled and not b_leveled):
+        reward -= 0.5
+
+    # Reward for leveling a module (small reward)
+    if (not a_leveled and next_a_leveled) or (not b_leveled and next_b_leveled):
+        if (stage == 1):
+            return 100
+        if (stage == 4 and next_a_leveled and next_b_leveled):
+            return 100
+        reward += 0.5
+
+    # Reward for unfixating an unlevelled module while the other module is leveled and fixated (medium reward)
+    if (a_fixed and not a_leveled and b_leveled and not next_a_fixed) or (b_fixed and not b_leveled and a_leveled and not next_b_fixed):
+        if (stage == 3):
+            return 100
+        reward += 1
+
+    # Reward for rising when neither module is leveled if one of the module is fixated (small reward)
+    if not (a_leveled or b_leveled) and (a_fixed or b_fixed) and (next_arm_angle > arm_angle):
+        reward += 0.5
+
+    # Reward for falling if neither module if fixated (small reward)
+    if not (a_fixed or b_fixed) and (next_arm_angle < arm_angle):
+        reward += 0.5
+
+    # Punish if a module is not leveled after it previously was (medium punish)
+    if (a_leveled and not next_a_leveled) or (b_leveled and not next_b_leveled):
+        reward -= 1
+
+    # Reward if a module is lowering distance while being leveled (small reward)
+    if (a_leveled and a_distance > next_a_distance) or (b_leveled and b_distance > next_b_distance):
+        reward += 0.5
+
+    # Punish for not falling if neither module is fixed (small punish)
+    if not (a_fixed or b_fixed) and (next_arm_angle >= arm_angle):
+        reward -= 0.5
+
+    return reward
 
 
 def perform_action(robot, action):
@@ -175,11 +196,11 @@ def perform_action(robot, action):
 # Define the hyperparameters
 learning_rate = 0.25
 gamma = 0.9  # Discount factor
-epsilon = 0.9  # Exploration rate (epsilon-greedy)
-epsilon_decay = 0.999
+epsilon = 0.95  # Exploration rate (epsilon-greedy)
+epsilon_decay = 0.9999
 target_update = 10
 steps_done = 0
-episodes = 1000
+episodes = 10000
 
 done = False
 robot = None
@@ -193,18 +214,20 @@ sensor_delay = 0  # Wait for sensors data to be updated
 score = 0
 highscore = float('-inf')
 rewards = []
-network_name = "q_network_v35.pth"
-time_limit = 5  # seconds
+network_name = "q_network_simple.pth"
+episode_time_limit = 15  # seconds
 episode_start_time = 0
 
 state_history = []
 state_history_limit = 10
 success = 0
-phase = 0
+stage = 0
+
+training_time_limit = 60 * 2  # seconds
 
 
 def controller(model, data):
-    global robot, actions, action_idx, stale_count, stale_limit, state, sensor_delay, score, done, steps_done, episodes, epsilon, epsilon_decay, target_update, target_network, q_network, optimizer, loss_fn, highscore, rewards, network_name, time_limit, episode_start_time, state_history, state_history_limit, success, phase
+    global robot, actions, action_idx, stale_count, stale_limit, state, sensor_delay, score, done, steps_done, episodes, epsilon, epsilon_decay, target_update, target_network, q_network, optimizer, loss_fn, highscore, rewards, network_name, episode_time_limit, episode_start_time, state_history, state_history_limit, success, stage
 
     if (robot is None):
         robot = LappaApi(data)
@@ -213,7 +236,7 @@ def controller(model, data):
     else:
         robot.update_data(data)
 
-    if (episodes <= 0):
+    if ((episodes <= 0) or (training_time_limit > 0 and data.time > training_time_limit)):
         done = True
 
     if (sensor_delay == 0):
@@ -222,7 +245,7 @@ def controller(model, data):
                 [state], dtype=torch.float32, device=device)
 
             if (not robot.is_locked()):
-                if (phase > 0 and (np.random.rand() < epsilon)):
+                if (np.random.rand() < epsilon):
                     action_idx = np.random.choice(action_dimensions)
                 else:
                     with torch.no_grad():
@@ -253,7 +276,7 @@ def controller(model, data):
                 revisit_count = sum(
                     1 for s, r in state_history if s == next_state)
 
-                if ((stale_count == stale_limit) or (data.time - episode_start_time > time_limit) or (revisit_count > 1)):
+                if ((stale_count == stale_limit) or (data.time - episode_start_time > episode_time_limit) or (revisit_count > 1)):
                     reward = -100
 
                 reward_tensor = torch.tensor(
@@ -269,8 +292,7 @@ def controller(model, data):
                 loss.backward()
                 optimizer.step()
 
-                if (phase > 0):
-                    epsilon *= epsilon_decay
+                epsilon *= epsilon_decay
                 state = next_state
 
                 rewards.append(reward)
@@ -280,11 +302,12 @@ def controller(model, data):
                 if (reward == 100 or reward == -100):
                     if (reward == 100):
                         success += 1
+                    if (success % 100 == 0):
+                        stage += 1
                     if (score >= highscore):
                         print_info(robot, episodes, epsilon, stale_count,
                                    score, highscore, actions, rewards)
                         print("Episodes:", episodes)
-                        print("Phase:", phase)
                         print("Success:", success)
                         time = round(data.time / 60, 2)
                         print("Time:", time, "minutes\n")
@@ -298,7 +321,7 @@ def controller(model, data):
                     rewards = []
                     stale_count = 0
                     score = 0
-                    phase = 0
+                    stage = 0
                     robot.reset()
                     state = (False, False, 0, 0, 0, False, False)
                     return
@@ -307,6 +330,7 @@ def controller(model, data):
                 if (steps_done % target_update == 0):
                     target_network.load_state_dict(q_network.state_dict())
         else:
+            print("")
             print("Total time:", round(data.time /
                   60, 2), "highscore:", highscore)
             print("Success:", success)

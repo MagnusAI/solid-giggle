@@ -185,12 +185,16 @@ class LappaApi(InterfaceLappaApi):
         elif action == "lower_b":
             self.lower("b")
         elif action == "rotate_a_forward":
+            self.set_thruster("b", 0)
             self.rotate_forward("a")
         elif action == "rotate_a_backward":
+            self.set_thruster("b", 0)
             self.rotate_backward("a")
         elif action == "rotate_b_forward":
+            self.set_thruster("a", 0)
             self.rotate_forward("b")
         elif action == "rotate_b_backward":
+            self.set_thruster("a", 0)
             self.rotate_backward("b")
         elif action == "stop_a_rotation":
             self.stop_rotation("a")

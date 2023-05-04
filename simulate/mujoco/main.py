@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from deep_ql_v35 import controller
+from deep_ql_simple import controller
 import os
 
 robot_path = '../../model/index.xml'

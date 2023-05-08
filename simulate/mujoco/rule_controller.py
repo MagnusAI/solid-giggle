@@ -134,7 +134,7 @@ def phase_six(state):
         print("Complete.")
         phase = 7
         return 'stop'
-    elif (leveled and a_distance > 30):
+    elif (leveled):
         return 'lower_a'
 
     return 'rotate_b_forward'

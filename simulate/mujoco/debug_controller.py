@@ -1,7 +1,7 @@
 import os
 import sys
 from api_v36 import *
-from deep_ql_clean import calculate_reward, get_stale_count, perform_action
+from deep_ql_v5 import calculate_reward, get_stale_count, perform_action
 
 actions_idx = None
 action = None
@@ -17,14 +17,42 @@ done = False
 state = (False, False, 0, 0, 0, False, False)  # init_state
 score = 0
 
-todo = ['stop_a_rotation', 'lower_a', 'rotate_a_backward', 'rotate_a_backward', 'rotate_b_backward']
+todo = ['lower_a', 'lift_b', 'rotate_a_backward', 'rotate_a_backward', 'lower_b']
+episodes = 5
 
+def print_statistics():
+    global robot, actions, rewards, stale_count, score, todo
+    robot.debug_info()
+    print("State: ", state)
+    print("Actions: ", actions)
+    print("Rewards: ", rewards)
+    print("Stale count:", stale_count)
+    print("Score:", score)
+    print("Remaining actions:", todo)
+    print(
+        "-------------------------------------------------------------------------------------------")
 
+def reset():
+    global episodes, robot, state, stale_count, score, actions, rewards, todo
+    print_statistics()
+    episodes -= 1
+    if (episodes > 0):
+        todo = ['lower_a', 'lift_b', 'rotate_a_backward', 'rotate_a_backward', 'lower_b']
+    else:
+        sys.exit()
+    score = 0
+    actions.clear()
+    rewards.clear()
+    stale_count = 0
+    state = (False, False, 0, 0, 0, False, False)  # init_state
+    
+def get_done():
+    global done
+    return done
 
-
-def stop():
-    sys.exit(0)
-
+def set_done(value):
+    global done
+    done = value
 
 def controller(model, data):
     global robot, state, action, stale_count, stale_limit, actions, score, done, todo, rewards
@@ -32,7 +60,6 @@ def controller(model, data):
     if (robot is None):
         robot = LappaApi(data)
         todo.reverse()
-        robot.reset()
         state = (False, False, 0, 0, 0, False, False)
         return
     else:
@@ -44,9 +71,11 @@ def controller(model, data):
     if (not done):
         if (not robot.is_locked()):
             action = todo.pop()
-            print("Action:", action)
 
-        next_state = perform_action(robot, state, action)
+        next_state = perform_action(robot, action)
+        if (next_state != state):
+            stale_count = 0
+            robot.unlock()
 
         if (not robot.is_locked() or stale_count == stale_limit):
 
@@ -56,20 +85,7 @@ def controller(model, data):
             actions.append(action)
             rewards.append(reward)
             score += reward
-
-            robot.debug_info()
-            print("State: ", state)
-            print("Next state: ", next_state)
-            print("Actions: ", actions)
-            print("Rewards: ", rewards)
-            print("Stale count:", stale_count)
-            print("Reward:", reward)
-            print("Score:", score)
-            print("Remaining actions:", todo)
-            print(
-                "-------------------------------------------------------------------------------------------")
     else:
-        #sys.exit(0)
         pass
         
 

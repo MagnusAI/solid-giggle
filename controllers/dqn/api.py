@@ -1,10 +1,8 @@
 import math
-from api_interface import InterfaceLappaApi
 
 AXIS = 2  # 0 = x, 1 = y, 2 = z
 
-
-class LappaApi(InterfaceLappaApi):
+class LappaApi():
     def __init__(self, data):
         self.data = data
         self.locked = False
@@ -110,33 +108,21 @@ class LappaApi(InterfaceLappaApi):
         pos = self.data.sensor(module + "_position").data
         return pos
 
-    def reset(self):
+    # Complete reset of all variables  
+    def reset(self, data):
         self.unlock()
-        # self.stop_rotation("a")
-        # self.stop_rotation("b")
-        # self.set_thruster("a", 0)
-        # self.set_thruster("b", 0)
-        # self.set_adhesion("a", 0)
-        # self.set_adhesion("b", 0)
-        # self.reset_module("a")
-        # self.reset_module("b")
-        # self.data.qpos = [0, 0, 0.13, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        # self.data.qvel[:] = 0
-        # self.data.qacc[:] = 0
-        # self.data.actuator_force[:] = 0
-        # self.data.sensordata[:] = 0
-        # # Reset all momentum
-        # self.data.qfrc_applied[:] = 0
-        # self.data.qfrc_constraint[:] = 0
-        # self.data.qfrc_inverse[:] = 0
-        # self.data.qfrc_passive[:] = 0
-        # self.data.qfrc_bias[:] = 0
-        # self.data.qfrc_actuator[:] = 0
-        pass
+        self.reset_module("a")
+        self.reset_module("b")
+        self.set_adhesion("a", 0)
+        self.set_adhesion("b", 0)
+        self.set_thruster("a", 0)
+        self.set_thruster("b", 0)
+        self.update_data(data)
+
 
     def lift(self, module):
         self.set_adhesion(module, 0)
-        self.set_thruster(module, .25)
+        self.set_thruster(module, .35)
         self.reset_module(module)
 
     def lower(self, module):

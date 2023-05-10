@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from debug_controller import controller
+from debug_controller import controller, get_done, set_done, reset
 import os
 
 robot_path = '../../model/index.xml'
@@ -19,6 +19,11 @@ mj.set_mjcb_control(robot_controller)
 glfw.init()
 window = glfw.create_window(600, 450, "Lappa", None, None)
 glfw.make_context_current(window)
+
+# Reset the simulation to the initial state.
+def reset_simulation():
+    mj.mj_resetData(model, data)
+    mj.mj_forward(model, data)
 
 # Set VSync to 1, which means that the window's buffer will be swapped with the front buffer at most once per frame.
 glfw.swap_interval(1)
@@ -60,5 +65,9 @@ while not glfw.window_should_close(window):
 
     glfw.swap_buffers(window)
     glfw.poll_events()
+    if (get_done()):
+        reset()
+        reset_simulation()
+        set_done(False)
 
 glfw.terminate()

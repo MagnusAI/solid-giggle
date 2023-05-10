@@ -1,6 +1,6 @@
 import mujoco as mj
 from mujoco.glfw import glfw
-from deep_ql_v5 import controller
+from controller import controller
 import os
 
 robot_path = '../../model/index.xml'
@@ -17,7 +17,7 @@ data = mj.MjData(model)
 mj.set_mjcb_control(robot_controller)
 
 glfw.init()
-window = glfw.create_window(600, 450, "Lappa v5", None, None)
+window = glfw.create_window(600, 450, "Lappa DQN", None, None)
 glfw.make_context_current(window)
 
 # Set VSync to 1, which means that the window's buffer will be swapped with the front buffer at most once per frame.

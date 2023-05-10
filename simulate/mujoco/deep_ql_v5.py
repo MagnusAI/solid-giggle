@@ -45,11 +45,11 @@ loss_fn = nn.MSELoss()
 # Define the hyperparameters
 learning_rate = 0.001
 gamma = 0.95  # Discount factor
-epsilon = 0.75  # Exploration rate (epsilon-greedy)
+epsilon = 0.9  # Exploration rate (epsilon-greedy)
 epsilon_decay = 0.999
 target_update = 10
 steps_done = 0
-episodes = 100000
+episodes = 1000
 
 done = False
 robot = None
@@ -62,15 +62,15 @@ state = (False, False, 0, 0, 0, False, False)  # initial state
 score = 0
 highscore = float('-inf')
 rewards = []
-network_name = "q_network_v36_hyper_v1.pth"
-episode_time_limit = 15  # seconds
+network_name = "q_network_v5.pth"
+episode_time_limit = 30  # seconds
 episode_start_time = 0
 
 state_history = []
 state_history_limit = 10
 success = 0
 
-training_time_limit = 60 * 60 * 2  # seconds
+training_time_limit = 60 * 60 * 4  # seconds
 
 def initialize(data):
     global robot
@@ -107,12 +107,21 @@ def controller(model, data):
             update_statistics(action, -100, next_state)
             handle_reward(-100)
         else:
-            action = choose_action()
-            next_state = perform_action(robot, state, action)
+            if (robot.is_locked()):
+                next_state = robot.read_state_from_sensors()
+                action = action_space[action_idx]
+                stale_count += 1
+            else:
+                action = choose_action()
+                next_state = perform_action(robot, action)
+
+            if (next_state != state):
+                robot.unlock()
+                stale_count = 0
 
             if (not robot.is_locked() or stale_count == stale_limit):
                 reward = calculate_reward(state, next_state, action)
-                update_q_network(state, action_idx, reward/10, next_state)
+                update_q_network(state, action_idx, reward, next_state)
                 update_statistics(action, reward, next_state)
                 handle_reward(reward)
     else:
@@ -142,49 +151,49 @@ def get_reward(state, next_state):
     a_rising, b_rising, a_falling, b_falling = a_distance < next_a_distance, b_distance < next_b_distance, a_distance > next_a_distance, b_distance > next_b_distance
     tipping, untipping = arm_angle < next_arm_angle, arm_angle > next_arm_angle
 
-    reward = -1
-    
-    if next_double_level_fixed: return 100
-    if not fixed and next_fixed: reward += 10
-    if not fixed and (b_falling or a_falling): reward += 1.5
-    if not fixed and (b_rising or a_rising): reward -= 1.5
-    if not fixed and next_a_distance > 30 and next_b_distance > 30: return -100
-    if fixed and not next_fixed: return -100
-    if not level_fixed and next_level_fixed: reward += 10
-    if level_fixed and not next_level_fixed: return -100
-    if double_fixed and next_level_fixed and releasing: reward += 10
-    if level_fixed and next_double_fixed and not next_double_level_fixed: reward -= 10
-    if fixed and levelling: reward += 2
-    if unlevelling: reward -= 5
-    if fixed and ((not a_leveled and (a_rising or tipping)) or (not b_leveled and (b_rising or tipping))): reward += 2
-    if fixed and ((a_leveled and (a_falling or untipping)) or (b_leveled and (b_falling or untipping))): reward += 2
+    reward = -.5
+
+    if next_fixed: reward += .5
+    if not fixed and next_fixed: reward += .1
+    if levelling: reward += .1
+    if unlevelling: reward -= .5
+    if not level_fixed and next_level_fixed: reward += .5
+    if next_level_fixed: reward += .1
+    if fixed and ((not a_leveled and a_rising) or (not b_leveled and b_rising)): reward += .1
+    if fixed and ((a_leveled and a_falling) or (b_leveled and b_falling)): reward += .1
+    if double_fixed and releasing: reward += .1
+    if next_double_fixed and not next_level_fixed: reward -= .25
+    if (fixed and not next_fixed): reward = -1
+    if level_fixed and not next_level_fixed: reward = -1
 
     return reward
 
-def perform_action(robot, state, action):
-    global stale_count
+def perform_action(robot, action):
+    global actions
     robot.lock()
     robot.perform_action(action)
-    stale_count += 1
-    next_state = robot.read_state_from_sensors()
-    if (next_state != state or (action in neutral_actions)):
-        robot.unlock()
-        stale_count = 0
-    return next_state
+    actions.append(action)
+    return robot.read_state_from_sensors()
 
 def calculate_reward(state, next_state, action):
     global stale_count, stale_limit, neutral_actions
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+
+    goal_condition = (next_a_fixed or next_b_fixed)
+    terminate_condition = next_a_distance == 999 or next_b_distance == 999
 
     reward = get_reward(state, next_state)
 
-    if (action in neutral_actions):
-        return -0.5
+    if (goal_condition):
+        return 100
+    elif (terminate_condition):
+        return -100
 
     # if (is_revisit_looping(state, next_state, reward)):
     #     return -100
 
     if ((stale_count == stale_limit)):
-        return -50
+        return -1
     
     return reward
 
@@ -245,7 +254,6 @@ def update_statistics(action, reward, next_state):
     epsilon *= epsilon_decay
     state = next_state
     rewards.append(reward)
-    actions.append(action)
     score += reward
     update_highscore(score)
     if (reward == 100):
@@ -256,27 +264,30 @@ def update_highscore(score):
     global highscore
     if (score >= highscore):    
         highscore = max(highscore, score)
-        print_statistics()
     else:
         highscore = max(highscore, score)
 
 def print_statistics():
     global highscore, state, success, episodes, epsilon, stale_count, score, actions, rewards, robot
-    print("-------------------- STATISTICS --------------------")
+    print("-------------------- STATISTICS (V5) --------------------")
+    robot.debug_info()
     print("Actions:", actions)
     print("Rewards:", rewards)
     print("Stale count:", stale_count)
     print("Epsilon:", epsilon)
     print("Success:", success)
+    print("Highscore:", highscore)
     time = round(robot.get_data().time / 60, 2)
     print("Time:", time, "minutes")
     print("Episodes:", episodes)
     print("State:", state)
-    print("Highscore:", highscore)
+    print("Score:", score)
 
 def end_episode():
-    global episodes, episode_start_time, actions, rewards, stale_count, score, robot, state
+    global episodes, episode_start_time, actions, rewards, stale_count, score, robot, state, epsilon
+    print_statistics()
     episodes -= 1
+    # if episodes % 200 == 0: epsilon = 0.8
     episode_start_time = round(robot.get_data().time, 1)
     actions = []
     rewards = []

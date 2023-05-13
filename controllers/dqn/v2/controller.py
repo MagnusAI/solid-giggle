@@ -21,7 +21,9 @@ state_space = list(itertools.product(
     [999, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 30],
     [999, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 30],
     [False, True],
-    [False, True]
+    [False, True],
+    [False, True],
+    [False, True],
 ))
 
 # Define state_dimensions
@@ -55,10 +57,10 @@ steps_done = 0
 episodes = 5000
 episode_time_limit = 20  # seconds
 stale_state_limit = 5000
-simulation_time_limit = 60 * 60 * 5  # seconds
+simulation_time_limit = 60 * 60 * 3  # seconds
 
 # Global variables
-network_name = "q_network_v1.pth"
+network_name = "q_network_v2.pth"
 robot = None
 stale_state_counter = 0
 episode_start_time = 0
@@ -124,8 +126,8 @@ def perform_action(robot, action):
     return robot.read_state_from_sensors()
     
 def get_reward(state, next_state):
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled, a_over_b, b_over_a = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled, next_a_over_b, next_b_over_a = next_state
 
     fixed, next_fixed = a_fixed or b_fixed, next_a_fixed or next_b_fixed
     level_fixed, next_level_fixed = (a_fixed and a_leveled) or (b_fixed and b_leveled), (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)
@@ -146,6 +148,7 @@ def get_reward(state, next_state):
     if fixed and ((a_leveled and a_falling) or (b_leveled and b_falling)): reward += .1
     if double_fixed and releasing: reward += .1
     if next_double_fixed and not next_level_fixed: reward -= .25
+    if (next_a_over_b and b_fixed and b_leveled) or (next_b_over_a and a_fixed and a_leveled): reward += .1
     if (fixed and not next_fixed): reward = -1
     if level_fixed and not next_level_fixed: reward = -1
 
@@ -218,7 +221,7 @@ def execute_step(robot, data):
 
 def handle_reward(reward, next_state, data):
     global current_state, action_idx, target_network, q_network, episode_score, episode_actions, episode_rewards, epsilon, epsilon_decay, episodes_success
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled, next_a_over_b, next_b_over_a = next_state
 
     # Step 1
     ground_fixed = (next_a_fixed and not next_a_leveled) or (next_b_fixed and not next_b_leveled)

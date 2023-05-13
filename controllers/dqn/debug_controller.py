@@ -5,7 +5,7 @@ from api import LappaApi
 import os
 import sys
 
-ac = ['lower_b', 'lift_a', 'lift_a', 'stop_b_rotation', 'lower_a', 'lower_a']
+ac = ['lower_b', 'rotate_b_forward', 'lower_b', 'lower_b', 'lift_b', 'rotate_b_backward', 'lower_b', 'lift_a', 'rotate_a_backward', 'lower_a', 'lift_a', 'lower_b', 'lower_b', 'lift_a', 'rotate_a_forward', 'lower_b', 'lower_b', 'rotate_b_forward', 'rotate_b_forward', 'stop_b_rotation', 'stop_a_rotation', 'rotate_a_forward', 'rotate_b_backward', 'stop_a_rotation', 'rotate_b_forward', 'lower_b', 'rotate_a_forward', 'lower_b', 'rotate_b_backward', 'lower_b', 'rotate_a_backward', 'rotate_a_backward', 'stop_a_rotation', 'lift_a', 'lift_b', 'rotate_a_forward', 'rotate_a_backward', 'lower_b', 'lower_b', 'lower_a', 'lower_b', 'lower_b', 'lower_b', 'rotate_b_forward', 'rotate_a_backward', 'lift_b', 'stop_b_rotation', 'stop_b_rotation', 'stop_b_rotation', 'rotate_b_forward', 'stop_b_rotation', 'rotate_a_backward', 'stop_b_rotation', 'rotate_b_backward', 'rotate_b_backward', 'lower_a', 'lower_b', 'rotate_b_backward']
 action = None
 debug_robot = None
 current_state = None

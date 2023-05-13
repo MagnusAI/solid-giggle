@@ -1,5 +1,5 @@
 import sys
-from api_v35 import *
+from api import *
 
 robot = None
 actions = []
@@ -96,7 +96,7 @@ def phase_four(state):
             return 'rotate_a_forward'
         if (action == 'rotate_a_forward'):
             return 'lower_b'
-        if (b_distance > 20):     # Try to change this to values between 0 and 30
+        if (b_distance > 18):     # Try to change this to values between 0 and 30
             return 'rotate_a_backward'
         if (not b_fixed):
             return 'lower_b'
@@ -179,5 +179,12 @@ def controller(model, data):
         if (not robot.is_locked()):
             state = next_state
             actions.append(action)
+
+            # Debug info
+            robot.debug_info()
+            print("State: ", robot.read_state_from_sensors())
+            print("Actions: ", actions)
+            print("Phase: ", phase)
+            print("___________________________________________________________")
     else:
         sensor_delay -= 1

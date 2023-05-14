@@ -48,16 +48,16 @@ loss_fn = nn.MSELoss()
 # Define the hyperparameters
 learning_rate = 0.001
 gamma = 0.95  # Discount factor
-epsilon = 0.6  # Exploration rate (epsilon-greedy)
+epsilon = 0.65  # Exploration rate (epsilon-greedy)
 epsilon_decay = 1
 target_update = 10
 steps_done = 0
 
 # Define limits
 episodes = 5000
-episode_time_limit = 20  # seconds
+episode_time_limit = 25  # seconds
 stale_state_limit = 5000
-simulation_time_limit = 60 * 60 * 3  # seconds
+simulation_time_limit = 60 * 60 * 7.5  # seconds
 
 # Global variables
 network_name = "q_network_v2.pth"

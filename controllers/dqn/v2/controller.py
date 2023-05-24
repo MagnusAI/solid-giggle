@@ -46,7 +46,7 @@ optimizer = optim.Adam(q_network.parameters(), lr=1e-3)
 loss_fn = nn.MSELoss()
 
 # Define the hyperparameters
-learning_rate = 0.001
+learning_rate = 0.01
 gamma = 0.95  # Discount factor
 epsilon = 0.65  # Exploration rate (epsilon-greedy)
 epsilon_decay = 1
@@ -57,10 +57,10 @@ steps_done = 0
 episodes = 5000
 episode_time_limit = 25  # seconds
 stale_state_limit = 5000
-simulation_time_limit = 60 * 60 * 7.5  # seconds
+simulation_time_limit = 60*60*3  # seconds
 
 # Global variables
-network_name = "q_network_v2.pth"
+network_name = "q_network_v2_new.pth"
 robot = None
 stale_state_counter = 0
 episode_start_time = 0
@@ -76,6 +76,7 @@ current_state = None
 action_idx = None
 simulation_model = None
 episodes_success = 0
+acc_score = 0
 
 def controller(model, data):
     global robot, episode_time_limit
@@ -87,7 +88,8 @@ def controller(model, data):
 
     simulation_time = round(data.time, 2)
     simulation_done =  episode_counter >= episodes or (simulation_time > simulation_time_limit and simulation_time_limit > 0)
-    print("Episode:", episode_counter, ", Score:", episode_score, ", Highscore:", highscore, ", Success:", episodes_success, ", Epsilon:", round(epsilon, 2), ", Stale:", stale_state_counter, ', time:', simulation_time, ", Episode time:", round(simulation_time - episode_start_time, 2), end='\r')
+    avg_score = acc_score / episode_counter if episode_counter > 0 else 0
+    print("Episode:", episode_counter, ", Score:", round(episode_score,2), ", Highscore:", round(highscore,2), "Avg. Score:", round(avg_score,2) ,", Success:", episodes_success, ", Epsilon:", round(epsilon, 2), ", Stale:", stale_state_counter, ', time (minutes):', round((simulation_time/60), 1), ", Episode time:", round(simulation_time - episode_start_time, 2), end='\r')
 
     if (not simulation_done):
         episode_timeout = simulation_time - episode_start_time > episode_time_limit and episode_time_limit > 0
@@ -101,6 +103,7 @@ def controller(model, data):
         print('Highscore:', highscore)
         print('Highscore actions:', highscore_actions)
         print('Episode successes:', episodes_success)
+        print("Average score:", acc_score / episode_counter)
         save_network(q_network, network_name)
         sys.exit(0)
 
@@ -136,19 +139,21 @@ def get_reward(state, next_state):
     a_rising, b_rising, a_falling, b_falling = a_distance < next_a_distance, b_distance < next_b_distance, a_distance > next_a_distance, b_distance > next_b_distance
     tipping, untipping = arm_angle < next_arm_angle, arm_angle > next_arm_angle
 
-    reward = -.5
+    reward = -.1
 
-    if next_fixed: reward += .5
-    if not fixed and next_fixed: reward += .1
-    if levelling: reward += .1
-    if unlevelling: reward -= .5
-    if not level_fixed and next_level_fixed: reward += .5
-    if next_level_fixed: reward += .1
-    if fixed and ((not a_leveled and a_rising) or (not b_leveled and b_rising)): reward += .1
+    if not fixed and next_fixed: reward = 1
+    if (not fixed or next_a_fixed) and (a_rising or b_rising): reward = -.5
+    if not fixed and ((a_falling and not b_rising) or (b_falling and not a_rising)): reward += .2
+    if fixed and levelling: reward += .2
+    if fixed and unlevelling: reward = -.5
+    if fixed and ((a_leveled and a_rising) or (b_leveled and b_rising)): reward += .1
+    if fixed and ((not a_leveled and a_rising) or (not b_leveled and b_rising)): reward += .2
     if fixed and ((a_leveled and a_falling) or (b_leveled and b_falling)): reward += .1
-    if double_fixed and releasing: reward += .1
-    if next_double_fixed and not next_level_fixed: reward -= .25
-    if (next_a_over_b and b_fixed and b_leveled) or (next_b_over_a and a_fixed and a_leveled): reward += .1
+    if next_double_fixed and next_level_fixed: reward = .5
+    if double_fixed and releasing: reward = .5
+    if next_double_fixed and not next_level_fixed: reward = -.5
+    if (next_a_over_b and b_fixed and b_leveled) or (next_b_over_a and a_fixed and a_leveled): reward += .75
+    if not level_fixed and next_level_fixed: reward = 1
     if (fixed and not next_fixed): reward = -1
     if level_fixed and not next_level_fixed: reward = -1
 
@@ -223,30 +228,28 @@ def handle_reward(reward, next_state, data):
     global current_state, action_idx, target_network, q_network, episode_score, episode_actions, episode_rewards, epsilon, epsilon_decay, episodes_success
     next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled, next_a_over_b, next_b_over_a = next_state
 
-    # Step 1
+    # Step 1 : Ground fixed
     ground_fixed = (next_a_fixed and not next_a_leveled) or (next_b_fixed and not next_b_leveled)
     step1 = ground_fixed
+
+    # Step 2 : Ground fixed and one module leveled
+    step2 = step1 and (next_a_leveled or next_b_leveled)
     
-    # Step 2
+    # Step 3 : Ground fixed and wall fixed
     wall_fixed = (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)
-    step2 = wall_fixed and ground_fixed
+    step3 = wall_fixed and ground_fixed
 
-    # Step 3
-    step3 = wall_fixed and not ground_fixed
+    # Step 4 : Wall fixed and NOT ground fixed
+    step4 = wall_fixed and not ground_fixed
 
-    # Step 4
-    step4 = step3 and (next_a_leveled and next_b_leveled)
+    # Step 5 : Wall fixed and both modules leveled
+    step5 = step3 and (next_a_leveled and next_b_leveled)
 
-    # Step 5
-    step5 = next_a_leveled and next_b_leveled and next_a_fixed and next_b_fixed
+    # Step 6 : Both modules leveled and fixed
+    step6 = next_a_leveled and next_b_leveled and next_a_fixed and next_b_fixed
 
-    goal_condition = step5
+    goal_condition = step6
     terminal_condition = next_a_distance >= 30 and next_b_distance >= 30
-
-    if (goal_condition): 
-        episodes_success += 1
-        reward = 100
-    if (terminal_condition): reward = -100
 
     update_q_network(current_state, next_state, action_idx, reward)
     update_target_network(target_network, q_network)
@@ -254,13 +257,17 @@ def handle_reward(reward, next_state, data):
     episode_score += reward
     episode_actions.append(action_space[action_idx])
     episode_rewards.append(reward)
-    if episodes_success % 5 == 0: epsilon *= epsilon_decay
+
+    if (goal_condition): 
+        episodes_success += 1
+        reward = 100
+    if (terminal_condition): reward = -100
 
     if (reward == 100 or reward == -100):
         end_episode(robot, data)
 
 def end_episode(robot, data):
-    global episode_counter, episode_score, current_state, highscore, episode_actions, episode_rewards, episode_start_time, stale_state_counter, simulation_model
+    global episode_counter, episode_score, current_state, highscore, episode_actions, episode_rewards, episode_start_time, stale_state_counter, simulation_model, acc_score, epsilon, epsilon_decay, episodes_success
     print("--------------------------------- END EPISODE ---------------------------------")
     print('Episode', episode_counter)
     print('State:', current_state)
@@ -272,11 +279,13 @@ def end_episode(robot, data):
 
     update_highscore(episode_score)
     episode_counter += 1
+    acc_score += episode_score
     episode_score = 0
     episode_actions.clear()
     episode_rewards.clear()
     episode_start_time = round(robot.get_data().time, 2)
     stale_state_counter = 0
+    epsilon *= epsilon_decay
     current_state = initial_state
     reset_simulation(simulation_model, data, robot)
 

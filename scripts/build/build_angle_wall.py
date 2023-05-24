@@ -10,7 +10,7 @@ else:
 
 filename = os.path.basename(__file__)
 
-wall_angle = -50  # Modify this value to change the angle of the wall
+wall_angle = 45  # Modify this value to change the angle of the wall
 box_width = 0.05
 wall_length = 40
 wall_height = 20

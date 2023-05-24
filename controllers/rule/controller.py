@@ -92,10 +92,6 @@ def phase_four(state):
         phase = 3
         return phase_three(state)
     else:
-        if (b_distance == 999):
-            return 'rotate_a_forward'
-        if (action == 'rotate_a_forward'):
-            return 'lower_b'
         if (b_distance > 18):     # Try to change this to values between 0 and 30
             return 'rotate_a_backward'
         if (not b_fixed):

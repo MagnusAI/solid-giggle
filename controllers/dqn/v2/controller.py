@@ -48,19 +48,19 @@ loss_fn = nn.MSELoss()
 # Define the hyperparameters
 learning_rate = 0.01
 gamma = 0.95  # Discount factor
-epsilon = 0.65  # Exploration rate (epsilon-greedy)
-epsilon_decay = 1
+epsilon = 0.75  # Exploration rate (epsilon-greedy)
+epsilon_decay = .999
 target_update = 10
 steps_done = 0
 
 # Define limits
 episodes = 5000
 episode_time_limit = 25  # seconds
-stale_state_limit = 5000
-simulation_time_limit = 60*60*3  # seconds
+stale_state_limit = 3000
+simulation_time_limit = 60*60  # seconds
 
 # Global variables
-network_name = "q_network_v2_new.pth"
+network_name = "q_network_v2_locked.pth"
 robot = None
 stale_state_counter = 0
 episode_start_time = 0
@@ -124,8 +124,9 @@ def get_action(robot, state):
 
 # Execute an action on the robot and return the next state
 def perform_action(robot, action):
-    robot.lock()
-    robot.perform_action(action)
+    if (not robot.is_locked()):
+        robot.lock()
+        robot.perform_action(action)
     return robot.read_state_from_sensors()
     
 def get_reward(state, next_state):

@@ -1,4 +1,5 @@
 import math
+import random
 
 AXIS = 2  # 0 = x, 1 = y, 2 = z
 
@@ -32,7 +33,6 @@ class LappaApi():
             "a"), " , ", self.get_h1_actuator("b"))
         print("Range: ", round(self.get_range("a"), 2),
               " , ", round(self.get_range("b"), 2))
-        print("Touch: ", self.get_touch("a"), " , ", self.get_touch("b"))
         print("Position", round(self.get_position("a")[AXIS], 2), round(
             self.get_position("b")[AXIS], 2))
 
@@ -59,6 +59,8 @@ class LappaApi():
 
     def get_range(self, module):
         data = self.data.sensor(module + "_rangefinder").data[0]
+        noise = random.gauss(0, 0.05)  # Mean = 0, std_dev = 0.05 (change according to your needs)
+        data += noise  # Add noise to the sensor value
         cm = data * 100
         if (self.get_pressure(module) > 2):
             return cm - 5  # The pressure somehow messes up the range
@@ -66,6 +68,8 @@ class LappaApi():
 
     def get_h1(self, module):
         scalar = self.data.sensor(module + "_h1").data[0]
+        noise = random.gauss(0, 0.05)  # Mean = 0, std_dev = 0.05 (change according to your needs)
+        scalar += noise  # Add noise to the sensor value
         degrees = math.degrees(scalar) % 360
         if (degrees < 0):
             degrees += 360
@@ -73,6 +77,8 @@ class LappaApi():
 
     def get_h2(self, module):
         sensor_value = self.data.sensor(module + "_h2").data[0]
+        noise = random.gauss(0, 0.05)  # Mean = 0, std_dev = 0.05 (change according to your needs)
+        sensor_value += noise  # Add noise to the sensor value
 
         # Convert the sensor value to degrees using a linear mapping
         degrees = (sensor_value * 45) / 0.785
@@ -85,10 +91,10 @@ class LappaApi():
         return degrees
 
     def get_pressure(self, module):
-        return self.data.sensor(module + "_vacuum").data[2]
-
-    def get_touch(self, module):
-        return self.data.sensor(module + "_touch").data[0]
+        data = self.data.sensor(module + "_vacuum").data[2]
+        noise = random.gauss(0, 0.05)  # Mean = 0, std_dev = 0.05 (change according to your needs)
+        data += noise  # Add noise to the sensor value
+        return data
 
     def stop_rotation(self, module):
         self.data.actuator(module + "_h1").ctrl = 0
@@ -98,7 +104,7 @@ class LappaApi():
     def rotate_module(self, module, ctrl):
         self.data.actuator(module + "_h1").ctrl = ctrl
 
-    def reset_module(self, module):
+    def reset_h1(self, module):
         self.data.actuator(module + "_h1").ctrl = 0
         self.data.joint(module + "_h1").qvel = 0
         self.data.joint(module + "_h1").qpos = 0
@@ -108,51 +114,18 @@ class LappaApi():
         pos = self.data.sensor(module + "_position").data
         return pos
 
-    # Complete reset of all variables  
-    def reset(self, data):
-        self.unlock()
-        self.reset_module("a")
-        self.reset_module("b")
-        self.set_adhesion("a", 0)
-        self.set_adhesion("b", 0)
-        self.set_thruster("a", 0)
-        self.set_thruster("b", 0)
-        self.update_data(data)
-
-
     def lift(self, module):
         self.set_adhesion(module, 0)
         self.set_thruster(module, .35)
-        self.reset_module(module)
+        self.reset_h1(module)
 
     def lower(self, module):
         self.set_thruster(module, -1)
-
-    def is_angle(self, module, target):
-        h1 = round(self.get_h1(module), 1)
-        d1 = abs(target - h1)
-        d2 = 360 - d1
-        diff = min(d1, d2)
-        allowed_offset = 5
-        return diff < allowed_offset
 
     def rotate(self, module, ctrl):
         counter_module = "b" if module == "a" else "a"
         self.stop_rotation(counter_module)
         self.rotate_module(module, ctrl)
-
-    def rotate_to(self, module, target, ctrl=.5):
-        if (self.is_angle(module, target)):
-            self.stop_rotation(module)
-            return
-        else:
-            h1 = round(self.get_h1(module), 1)
-            diff = abs(h1 - target) % 360
-            if diff <= 180:
-                ctrl = ctrl if target > h1 else -ctrl
-            else:
-                ctrl = ctrl if target < h1 else -ctrl
-            self.rotate(module, ctrl)
 
     def rotate_forward(self, module):
         self.rotate(module, .2)
@@ -218,15 +191,6 @@ class LappaApi():
             return 15
         else:
             return 0
-
-    def is_rotated(self):
-        a_h1 = self.get_h1("a")
-        b_h1 = self.get_h1("b")
-        diff = abs(a_h1 - b_h1)
-        if diff > 180:
-            diff = 360 - diff
-        offset = 10
-        return diff > (90 - offset)
 
     def get_distance(self, module):
         range = self.get_range(module)

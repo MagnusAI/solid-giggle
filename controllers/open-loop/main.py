@@ -3,7 +3,7 @@ from mujoco.glfw import glfw
 from controller import controller
 import os
 
-robot_path = '../../model/index.xml'
+robot_path = '../../model/surface/index_angle.xml' # Change this when testing a different model
 robot_controller = controller
 
 # Define the path to the XML model file.

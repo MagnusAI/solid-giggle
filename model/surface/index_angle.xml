@@ -1,0 +1,8 @@
+<!-- The Lappa robot -->
+<mujoco>
+	<!-- set options to simulate underwater environment -->
+	<option gravity="0 0 0" density="1025" viscosity=" 0.00125" />
+	<include file="floor.xml" />
+	<include file="angled_surface.xml" />
+	<include file="../robots/model_v6.xml" />
+</mujoco>

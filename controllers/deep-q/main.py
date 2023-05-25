@@ -128,7 +128,7 @@ def get_reward(state, next_state):
 
     reward = -.1
 
-    if next_double_level_fixed: return 100
+    if next_double_level_fixed: return 500
     if not fixed and (next_a_distance > 30 and next_b_distance > 30): return -100
     if not fixed and next_fixed: reward = 1
     if (not fixed or next_a_fixed) and (a_rising or b_rising): reward = -.5
@@ -235,7 +235,7 @@ def is_terminal_state(data):
     a_fixed, b_fixed, arm_angle, a_range, b_range, a_levelled, b_levelled = robot.get_state() 
 
     terminal_condition = ((not a_fixed and not b_fixed) and (a_range > 30 and b_range > 30)) or (latest_reward == -100)
-    goal_condition = ((a_fixed and b_fixed) and (a_levelled and b_levelled)) or (latest_reward == 100)
+    goal_condition = ((a_fixed and b_fixed) and (a_levelled and b_levelled)) or (latest_reward == 500)
     time_limit = real_time(data.time) > episode_time_limit
     return goal_condition or terminal_condition or time_limit
 
@@ -256,7 +256,7 @@ while not glfw.window_should_close(window):
         mj.mj_step(model, data)
         
     if is_terminal_state(data):
-        print("Episode", episode_counter, "score:", episode_score, "final state:", robot.get_state(), "latest reward:", latest_reward)
+        print("Episode", episode_counter, "score:", round(episode_score,1), "final state:", robot.get_state(), "latest reward:", latest_reward)
         reset_env()
 
     # Get and set the width and height of the window's framebuffer.

@@ -31,19 +31,19 @@ def get_action(phase):
 
 def get_duration(phase):
     if (phase == 1):
-        return 1
+        return 2
     elif (phase == 2):
         return 1
     elif (phase == 3):
         return 1.5
     elif (phase == 4):
-        return 1
+        return 2
     elif (phase == 5):
-        return .1
-    elif (phase == 6):
-        return .5
-    elif (phase == 7):
         return 1
+    elif (phase == 6):
+        return 1
+    elif (phase == 7):
+        return 2
     else:
         return 1
 
@@ -82,7 +82,8 @@ def controller(model, data):
                 time = round(data.time,2)
                 state = robot.get_state()
                 success = state[0] and state[1] and state[5] and state[6]
-                result = {"time": time, "success": "True" if success else "False"}
+                result = {"Final state": state, "time": time, "success": "True" if success else "False"}
                 f.write(str(result) + "\n")
+            sys.exit(0)
 
         next_state = perform_action(robot, action)

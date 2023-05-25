@@ -32,7 +32,6 @@ class LappaApi():
             "a"), " , ", self.get_h1_actuator("b"))
         print("Range: ", round(self.get_range("a"), 2),
               " , ", round(self.get_range("b"), 2))
-        print("Touch: ", self.get_touch("a"), " , ", self.get_touch("b"))
         print("Position", round(self.get_position("a")[AXIS], 2), round(
             self.get_position("b")[AXIS], 2))
 
@@ -86,9 +85,6 @@ class LappaApi():
 
     def get_pressure(self, module):
         return self.data.sensor(module + "_vacuum").data[2]
-
-    def get_touch(self, module):
-        return self.data.sensor(module + "_touch").data[0]
 
     def stop_rotation(self, module):
         self.data.actuator(module + "_h1").ctrl = 0
@@ -265,6 +261,6 @@ class LappaApi():
         arm_angle = self.get_arm_angle()
         a_range = self.get_distance("a")
         b_range = self.get_distance("b")
-        a_levelled = round(self.get_position("a")[AXIS], 2) > 0.15
-        b_levelled = round(self.get_position("b")[AXIS], 2) > 0.15
+        a_levelled = round(self.get_position("a")[AXIS], 2) > 0.1
+        b_levelled = round(self.get_position("b")[AXIS], 2) > 0.1
         return (a_fixed, b_fixed, arm_angle, a_range, b_range, a_levelled, b_levelled)

@@ -52,19 +52,19 @@ def load_network():
 
 
 def get_reward(state, next_state):
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
     next_fixed = next_a_fixed or next_b_fixed
-    level_fixed = (a_fixed and a_leveled) or (b_fixed and b_leveled)
-    next_level_fixed = (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)
+    level_fixed = (a_fixed and a_levelled) or (b_fixed and b_levelled)
+    next_level_fixed = (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
     double_fixed = a_fixed and b_fixed
     next_double_fixed = next_a_fixed and next_b_fixed
-    next_double_level_fixed = next_a_fixed and next_b_fixed and next_a_leveled and next_b_leveled
+    next_double_level_fixed = next_a_fixed and next_b_fixed and next_a_levelled and next_b_levelled
     releasing = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed)
-    levelling = (not a_leveled and next_a_leveled) or (not b_leveled and next_b_leveled)
-    unlevelling = (a_leveled and not next_a_leveled) or (b_leveled and not next_b_leveled)
+    levelling = (not a_levelled and next_a_levelled) or (not b_levelled and next_b_levelled)
+    unlevelling = (a_levelled and not next_a_levelled) or (b_levelled and not next_b_levelled)
     a_rising = a_distance < next_a_distance
     b_rising = b_distance < next_b_distance
     a_falling = a_distance > next_a_distance
@@ -104,10 +104,10 @@ def get_reward(state, next_state):
     if (unlevelling):
         rewards -= 10
     
-    if (not a_leveled and (a_rising or tipping) or not b_leveled and (b_rising or tipping)):
+    if (not a_levelled and (a_rising or tipping) or not b_levelled and (b_rising or tipping)):
         rewards += 1
     
-    if (a_leveled and (a_falling or untipping) or b_leveled and (b_falling or untipping)):
+    if (a_levelled and (a_falling or untipping) or b_levelled and (b_falling or untipping)):
         rewards += 1
 
     return rewards
@@ -122,8 +122,8 @@ def get_reward(state, next_state):
 
 def phase_zero(state, next_state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
     next_fixed = next_a_fixed or next_b_fixed
@@ -155,15 +155,15 @@ def phase_zero(state, next_state):
 
 def phase_one(state, next_state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
     next_fixed = next_a_fixed or next_b_fixed
     rising = a_distance < next_a_distance or b_distance < next_b_distance
     tipping = arm_angle < next_arm_angle
-    half_leveled = a_leveled or b_leveled
-    next_half_leveled = next_a_leveled or next_b_leveled
+    half_levelled = a_levelled or b_levelled
+    next_half_levelled = next_a_levelled or next_b_levelled
     next_angled = next_arm_angle == 90
 
     if (fixed and next_fixed):
@@ -172,7 +172,7 @@ def phase_one(state, next_state):
             return 100
         if (rising or tipping):
             return 1
-        if (not half_leveled):
+        if (not half_levelled):
             return -5
         return -1
     else:
@@ -181,23 +181,23 @@ def phase_one(state, next_state):
 
 def phase_two(state, next_state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
     falling = a_distance > next_a_distance or b_distance > next_b_distance
     rising = a_distance < next_a_distance or b_distance < next_b_distance
     untipping = arm_angle > next_arm_angle
     angled = arm_angle == 90
-    next_half_leveled = next_a_leveled or next_b_leveled
+    next_half_levelled = next_a_levelled or next_b_levelled
 
 
 
 
 def phase_three(state, next_state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
     next_fixed = next_a_fixed or next_b_fixed
@@ -205,13 +205,13 @@ def phase_three(state, next_state):
     rising = a_distance < next_a_distance or b_distance < next_b_distance
     untipping = arm_angle > next_arm_angle
     angled = arm_angle == 90
-    next_half_leveled = next_a_leveled or next_b_leveled
-    next_leveled = next_a_leveled and next_b_leveled
+    next_half_levelled = next_a_levelled or next_b_levelled
+    next_levelled = next_a_levelled and next_b_levelled
 
     if (next_fixed):
-        if (next_leveled):
+        if (next_levelled):
             return 100
-        if ((not next_a_fixed and next_a_leveled) or (not next_b_fixed and next_b_leveled)):
+        if ((not next_a_fixed and next_a_levelled) or (not next_b_fixed and next_b_levelled)):
             return 10
         return -1
     else:
@@ -220,7 +220,7 @@ def phase_three(state, next_state):
 
 def perform_action(robot, action):
     robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
+    next_state = robot.get_state()
     return next_state
 
 

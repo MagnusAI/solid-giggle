@@ -102,13 +102,13 @@ def controller(model, data):
     if (not done):
         if (episode_timedout):
             action = action_space[action_idx]
-            next_state = robot.read_state_from_sensors()
+            next_state = robot.get_state()
             update_q_network(state, action_idx, -100, next_state)
             update_statistics(action, -100, next_state)
             handle_reward(-100)
         else:
             if (robot.is_locked()):
-                next_state = robot.read_state_from_sensors()
+                next_state = robot.get_state()
                 action = action_space[action_idx]
                 stale_count += 1
             else:
@@ -141,13 +141,13 @@ def load_network():
         pass
 
 def get_reward(state, next_state):
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed, next_fixed = a_fixed or b_fixed, next_a_fixed or next_b_fixed
-    level_fixed, next_level_fixed = (a_fixed and a_leveled) or (b_fixed and b_leveled), (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)
-    double_fixed, next_double_fixed, next_double_level_fixed = a_fixed and b_fixed, next_a_fixed and next_b_fixed, next_a_fixed and next_b_fixed and next_a_leveled and next_b_leveled
-    releasing, levelling, unlevelling = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed), (not a_leveled and next_a_leveled) or (not b_leveled and next_b_leveled), (a_leveled and not next_a_leveled) or (b_leveled and not next_b_leveled)
+    level_fixed, next_level_fixed = (a_fixed and a_levelled) or (b_fixed and b_levelled), (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
+    double_fixed, next_double_fixed, next_double_level_fixed = a_fixed and b_fixed, next_a_fixed and next_b_fixed, next_a_fixed and next_b_fixed and next_a_levelled and next_b_levelled
+    releasing, levelling, unlevelling = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed), (not a_levelled and next_a_levelled) or (not b_levelled and next_b_levelled), (a_levelled and not next_a_levelled) or (b_levelled and not next_b_levelled)
     a_rising, b_rising, a_falling, b_falling = a_distance < next_a_distance, b_distance < next_b_distance, a_distance > next_a_distance, b_distance > next_b_distance
     tipping, untipping = arm_angle < next_arm_angle, arm_angle > next_arm_angle
 
@@ -159,8 +159,8 @@ def get_reward(state, next_state):
     if unlevelling: reward -= .5
     if not level_fixed and next_level_fixed: reward += .5
     if next_level_fixed: reward += .1
-    if fixed and ((not a_leveled and a_rising) or (not b_leveled and b_rising)): reward += .1
-    if fixed and ((a_leveled and a_falling) or (b_leveled and b_falling)): reward += .1
+    if fixed and ((not a_levelled and a_rising) or (not b_levelled and b_rising)): reward += .1
+    if fixed and ((a_levelled and a_falling) or (b_levelled and b_falling)): reward += .1
     if double_fixed and releasing: reward += .1
     if next_double_fixed and not next_level_fixed: reward -= .25
     if (fixed and not next_fixed): reward = -1
@@ -173,11 +173,11 @@ def perform_action(robot, action):
     robot.lock()
     robot.perform_action(action)
     actions.append(action)
-    return robot.read_state_from_sensors()
+    return robot.get_state()
 
 def calculate_reward(state, next_state, action):
     global stale_count, stale_limit, neutral_actions
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     goal_condition = (next_a_fixed or next_b_fixed)
     terminate_condition = next_a_distance == 999 or next_b_distance == 999

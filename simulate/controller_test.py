@@ -41,7 +41,7 @@ def controller(model, data):
         API.debug_info()
         #debug_debug(data)
 
-    state = API.read_state_from_sensors()
+    state = API.get_state()
     init_condition = not state[0] and not state[1] and not state[2] and not state[5] and not state[6]
     one_condition = state[0] and state[1]
     two_condition = state[0] and state[2]

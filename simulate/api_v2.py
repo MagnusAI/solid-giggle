@@ -20,7 +20,7 @@ class LappaApi(InterfaceLappaApi):
 
     def debug_info(self):
         print("---------------------------------------------------------")
-        print("State: ", self.read_state_from_sensors())
+        print("State: ", self.get_state())
         print("H1: ", round(self.get_h1("a"), 1),
               " , ", round(self.get_h1("b"), 1))
         print("H2: ", round(self.get_h2("a"), 1),
@@ -196,13 +196,13 @@ class LappaApi(InterfaceLappaApi):
         offset = 10
         return diff > (90 - offset)
 
-    def read_state_from_sensors(self):
+    def get_state(self):
         global AXIS
         a_fixed = self.get_pressure("a") < -45
         b_fixed = self.get_pressure("b") < -45
 
         lifted = self.is_lifted()
         rotated = self.is_rotated()
-        a_leveled = round(self.get_position("a")[AXIS], 2) > 0.15
-        b_leveled = round(self.get_position("b")[AXIS], 2) > 0.15
-        return (a_fixed, b_fixed, lifted, rotated, a_leveled, b_leveled)
+        a_levelled = round(self.get_position("a")[AXIS], 2) > 0.15
+        b_levelled = round(self.get_position("b")[AXIS], 2) > 0.15
+        return (a_fixed, b_fixed, lifted, rotated, a_levelled, b_levelled)

@@ -49,7 +49,7 @@ loss_fn = nn.MSELoss()
 # Function to perform an action on the robot and read the next state from the sensors
 def perform_action(robot, action):
     robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
+    next_state = robot.get_state()
     return next_state
 
 # Function to get the reward given current state, action, and next state

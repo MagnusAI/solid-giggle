@@ -127,16 +127,16 @@ def perform_action(robot, action):
     if (not robot.is_locked()):
         robot.lock()
         robot.perform_action(action)
-    return robot.read_state_from_sensors()
+    return robot.get_state()
     
 def get_reward(state, next_state):
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled, a_over_b, b_over_a = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled, next_a_over_b, next_b_over_a = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled, a_over_b, b_over_a = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled, next_a_over_b, next_b_over_a = next_state
 
     fixed, next_fixed = a_fixed or b_fixed, next_a_fixed or next_b_fixed
-    level_fixed, next_level_fixed = (a_fixed and a_leveled) or (b_fixed and b_leveled), (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)
-    double_fixed, next_double_fixed, next_double_level_fixed = a_fixed and b_fixed, next_a_fixed and next_b_fixed, next_a_fixed and next_b_fixed and next_a_leveled and next_b_leveled
-    releasing, levelling, unlevelling = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed), (not a_leveled and next_a_leveled) or (not b_leveled and next_b_leveled), (a_leveled and not next_a_leveled) or (b_leveled and not next_b_leveled)
+    level_fixed, next_level_fixed = (a_fixed and a_levelled) or (b_fixed and b_levelled), (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
+    double_fixed, next_double_fixed, next_double_level_fixed = a_fixed and b_fixed, next_a_fixed and next_b_fixed, next_a_fixed and next_b_fixed and next_a_levelled and next_b_levelled
+    releasing, levelling, unlevelling = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed), (not a_levelled and next_a_levelled) or (not b_levelled and next_b_levelled), (a_levelled and not next_a_levelled) or (b_levelled and not next_b_levelled)
     a_rising, b_rising, a_falling, b_falling = a_distance < next_a_distance, b_distance < next_b_distance, a_distance > next_a_distance, b_distance > next_b_distance
     tipping, untipping = arm_angle < next_arm_angle, arm_angle > next_arm_angle
 
@@ -147,13 +147,13 @@ def get_reward(state, next_state):
     if not fixed and ((a_falling and not b_rising) or (b_falling and not a_rising)): reward += .2
     if fixed and levelling: reward += .2
     if fixed and unlevelling: reward = -.5
-    if fixed and ((a_leveled and a_rising) or (b_leveled and b_rising)): reward += .1
-    if fixed and ((not a_leveled and a_rising) or (not b_leveled and b_rising)): reward += .2
-    if fixed and ((a_leveled and a_falling) or (b_leveled and b_falling)): reward += .1
+    if fixed and ((a_levelled and a_rising) or (b_levelled and b_rising)): reward += .1
+    if fixed and ((not a_levelled and a_rising) or (not b_levelled and b_rising)): reward += .2
+    if fixed and ((a_levelled and a_falling) or (b_levelled and b_falling)): reward += .1
     if next_double_fixed and next_level_fixed: reward = .5
     if double_fixed and releasing: reward = .5
     if next_double_fixed and not next_level_fixed: reward = -.5
-    if (next_a_over_b and b_fixed and b_leveled) or (next_b_over_a and a_fixed and a_leveled): reward += .75
+    if (next_a_over_b and b_fixed and b_levelled) or (next_b_over_a and a_fixed and a_levelled): reward += .75
     if not level_fixed and next_level_fixed: reward = 1
     if (fixed and not next_fixed): reward = -1
     if level_fixed and not next_level_fixed: reward = -1
@@ -164,7 +164,8 @@ def initialize(model, data):
     global robot, current_state, initial_state, simulation_model, initial_data
     simulation_model = model
     robot = LappaApi(data)
-    initial_state = robot.read_state_from_sensors()
+    reset_simulation(data)
+    initial_state = robot.get_state()
     current_state = initial_state
     initial_data = data
     load_network()
@@ -227,27 +228,27 @@ def execute_step(robot, data):
 
 def handle_reward(reward, next_state, data):
     global current_state, action_idx, target_network, q_network, episode_score, episode_actions, episode_rewards, epsilon, epsilon_decay, episodes_success
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled, next_a_over_b, next_b_over_a = next_state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled, next_a_over_b, next_b_over_a = next_state
 
     # Step 1 : Ground fixed
-    ground_fixed = (next_a_fixed and not next_a_leveled) or (next_b_fixed and not next_b_leveled)
+    ground_fixed = (next_a_fixed and not next_a_levelled) or (next_b_fixed and not next_b_levelled)
     step1 = ground_fixed
 
-    # Step 2 : Ground fixed and one module leveled
-    step2 = step1 and (next_a_leveled or next_b_leveled)
+    # Step 2 : Ground fixed and one module levelled
+    step2 = step1 and (next_a_levelled or next_b_levelled)
     
     # Step 3 : Ground fixed and wall fixed
-    wall_fixed = (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)
+    wall_fixed = (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
     step3 = wall_fixed and ground_fixed
 
     # Step 4 : Wall fixed and NOT ground fixed
     step4 = wall_fixed and not ground_fixed
 
-    # Step 5 : Wall fixed and both modules leveled
-    step5 = step3 and (next_a_leveled and next_b_leveled)
+    # Step 5 : Wall fixed and both modules levelled
+    step5 = step3 and (next_a_levelled and next_b_levelled)
 
-    # Step 6 : Both modules leveled and fixed
-    step6 = next_a_leveled and next_b_leveled and next_a_fixed and next_b_fixed
+    # Step 6 : Both modules levelled and fixed
+    step6 = next_a_levelled and next_b_levelled and next_a_fixed and next_b_fixed
 
     goal_condition = step6
     terminal_condition = next_a_distance >= 30 and next_b_distance >= 30
@@ -288,7 +289,7 @@ def end_episode(robot, data):
     stale_state_counter = 0
     epsilon *= epsilon_decay
     current_state = initial_state
-    reset_simulation(simulation_model, data, robot)
+    reset_simulation(data)
 
 def update_highscore(score):
     global highscore, highscore_actions, episode_actions
@@ -296,8 +297,9 @@ def update_highscore(score):
         highscore = score
         highscore_actions = episode_actions.copy()
 
-def reset_simulation(model, data, robot):
-    data.qpos[:] = model.qpos0.copy()
+def reset_simulation(data):
+    data.qpos[:] = 0
+    data.qpos[2] = .13
     data.qvel[:] = 0
     data.ctrl[:] = 0
     data.sensordata[:] = 0
@@ -313,3 +315,4 @@ def reset_simulation(model, data, robot):
     data.qacc_smooth[:] = 0
     data.qacc_warmstart[:] = 0
     data.xquat[:] = 0
+    return data

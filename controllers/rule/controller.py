@@ -32,7 +32,7 @@ def get_action(state):
 
 def phase_one(state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
     fixed = a_fixed or b_fixed
 
     if (not fixed):
@@ -44,7 +44,7 @@ def phase_one(state):
 
 def phase_two(state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
     fixed = a_fixed or b_fixed
     angled = arm_angle == 90
 
@@ -61,7 +61,7 @@ def phase_two(state):
 
 def phase_three(state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
     fixed = a_fixed or b_fixed
     angled = arm_angle == 90
 
@@ -81,7 +81,7 @@ def phase_three(state):
 
 def phase_four(state):
     global phase, action
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
     fixed = a_fixed or b_fixed
     angled = arm_angle == 90
 
@@ -103,11 +103,11 @@ def phase_four(state):
 
 def phase_five(state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
 
     if (a_fixed and b_fixed):
         return 'lift_a'
-    elif (b_fixed and b_leveled):
+    elif (b_fixed and b_levelled):
         phase = 6
         return phase_six(state)
     else:
@@ -117,20 +117,20 @@ def phase_five(state):
 
 def phase_six(state):
     global phase
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
 
     fixed = a_fixed or b_fixed
-    half_leveled = a_leveled or b_leveled
-    leveled = a_leveled and b_leveled
+    half_levelled = a_levelled or b_levelled
+    levelled = a_levelled and b_levelled
 
     if (not fixed):
         phase = 4
         return phase_four(state)
-    elif (leveled and a_fixed and b_fixed):
+    elif (levelled and a_fixed and b_fixed):
         print("Complete.")
         phase = 7
         return 'stop'
-    elif (leveled):
+    elif (levelled):
         return 'lower_a'
 
     return 'rotate_b_forward'
@@ -138,7 +138,7 @@ def phase_six(state):
 
 def perform_action(robot, action):
     robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
+    next_state = robot.get_state()
     return next_state
 
 def stop():
@@ -178,7 +178,7 @@ def controller(model, data):
 
             # Debug info
             robot.debug_info()
-            print("State: ", robot.read_state_from_sensors())
+            print("State: ", robot.get_state())
             print("Actions: ", actions)
             print("Phase: ", phase)
             print("___________________________________________________________")

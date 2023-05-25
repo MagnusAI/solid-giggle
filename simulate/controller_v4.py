@@ -91,8 +91,8 @@ def get_state():
     b_fixed = API.get_pressure("b") < -45
     lifted = is_lifted()
     rotated = is_rotated()
-    leveled = is_leveled()
-    state = (a_fixed, b_fixed, lifted, rotated, leveled)
+    levelled = is_levelled()
+    state = (a_fixed, b_fixed, lifted, rotated, levelled)
 
     if (state != STATE):
         # Debug
@@ -271,7 +271,7 @@ def is_rotated():
     return rot_90 or rot_270
 
 
-def is_leveled():
+def is_levelled():
     global API, AXIS
     a_pos = round(API.get_position("a")[AXIS], 2)
     b_pos = round(API.get_position("b")[AXIS], 2)
@@ -320,7 +320,7 @@ def controller(model, data):
             "b_pos": API.get_position("b"),
             "actions_count": len(ACTIONS),
             "time": data.time,
-            "success": is_leveled() and state[0] and state[1]
+            "success": is_levelled() and state[0] and state[1]
         }
 
         with open("output/results.txt", "a") as f:

@@ -52,18 +52,18 @@ def load_network():
 
 def get_reward(state, next_state):
     global stage
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
-    goal_condition = next_a_fixed and next_b_fixed and next_a_leveled and next_b_leveled
+    goal_condition = next_a_fixed and next_b_fixed and next_a_levelled and next_b_levelled
 
     if (goal_condition):
         return 100
 
     reward = 0
 
-    # Punish for unfixating a module that is leveled (Great punish) or if the other module is not fixated (great punish)
-    if (a_fixed and not next_a_fixed and (not b_fixed or b_leveled)) or (b_fixed and not next_b_fixed and (not a_fixed or a_leveled)):
+    # Punish for unfixating a module that is levelled (Great punish) or if the other module is not fixated (great punish)
+    if (a_fixed and not next_a_fixed and (not b_fixed or b_levelled)) or (b_fixed and not next_b_fixed and (not a_fixed or a_levelled)):
         return -100
 
     if (next_a_distance > 30 and next_b_distance > 30):
@@ -75,50 +75,50 @@ def get_reward(state, next_state):
             return 100
         reward += 1
 
-    # Reward for fixating a module that is leveled (Great reward)
-    if (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled):
+    # Reward for fixating a module that is levelled (Great reward)
+    if (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled):
         if (is_learning_stage(3)):
             return 100
         reward += 2
 
-    # Reward for unfixating a module if the other module is fixated and leveled (small)
-    if (a_fixed and b_leveled and not next_a_fixed) or (b_fixed and a_leveled and not next_b_fixed):
+    # Reward for unfixating a module if the other module is fixated and levelled (small)
+    if (a_fixed and b_levelled and not next_a_fixed) or (b_fixed and a_levelled and not next_b_fixed):
         reward += 0.5
 
-    # Punish for fixating a module that isn’t leveled if the other module if fixated and leveled (small punish)
-    if (not a_fixed and next_a_fixed and not next_a_leveled and b_leveled and b_fixed) or (not b_fixed and next_b_fixed and not next_b_leveled and a_leveled and a_fixed):
+    # Punish for fixating a module that isn’t levelled if the other module if fixated and levelled (small punish)
+    if (not a_fixed and next_a_fixed and not next_a_levelled and b_levelled and b_fixed) or (not b_fixed and next_b_fixed and not next_b_levelled and a_levelled and a_fixed):
         # print("punish 1")
         reward -= 0.5
 
     # Reward for leveling a module (small reward)
-    if (not a_leveled and next_a_leveled) or (not b_leveled and next_b_leveled):
+    if (not a_levelled and next_a_levelled) or (not b_levelled and next_b_levelled):
         if (is_learning_stage(1) and (next_a_fixed or next_b_fixed)):
             return 100
-        if (is_learning_stage(5) and next_a_leveled and next_b_leveled):
+        if (is_learning_stage(5) and next_a_levelled and next_b_levelled):
             return 100
         reward += 0.5
 
-    # Reward for unfixating an unlevelled module while the other module is leveled and fixated (medium reward)
-    if (a_fixed and not a_leveled and b_leveled and not next_a_fixed) or (b_fixed and not b_leveled and a_leveled and not next_b_fixed):
+    # Reward for unfixating an unlevelled module while the other module is levelled and fixated (medium reward)
+    if (a_fixed and not a_levelled and b_levelled and not next_a_fixed) or (b_fixed and not b_levelled and a_levelled and not next_b_fixed):
         if (is_learning_stage(4)):
             return 100
         reward += 1
 
-    # Reward for rising when neither module is leveled if one of the module is fixated (small reward)
-    if not (a_leveled or b_leveled) and (a_fixed or b_fixed) and (next_arm_angle > arm_angle or (next_a_distance > a_distance or next_b_distance > b_distance)):
+    # Reward for rising when neither module is levelled if one of the module is fixated (small reward)
+    if not (a_levelled or b_levelled) and (a_fixed or b_fixed) and (next_arm_angle > arm_angle or (next_a_distance > a_distance or next_b_distance > b_distance)):
         reward += 0.5
 
     # Reward for falling if neither module if fixated (small reward)
     if not (a_fixed or b_fixed) and (next_arm_angle < arm_angle or (next_a_distance < a_distance or next_b_distance < b_distance)):
         reward += 0.5
 
-    # Punish if a module is not leveled after it previously was (medium punish)
-    if (a_leveled and not next_a_leveled) or (b_leveled and not next_b_leveled):
+    # Punish if a module is not levelled after it previously was (medium punish)
+    if (a_levelled and not next_a_levelled) or (b_levelled and not next_b_levelled):
         # print("punish 2")
         reward -= 1
 
-    # Reward if a module is lowering distance while being leveled (small reward)
-    if (next_a_leveled and a_distance > next_a_distance) or (next_b_leveled and b_distance > next_b_distance):
+    # Reward if a module is lowering distance while being levelled (small reward)
+    if (next_a_levelled and a_distance > next_a_distance) or (next_b_levelled and b_distance > next_b_distance):
         if (is_learning_stage(2) and (next_a_distance < 16 and next_b_distance < 16) and (next_a_fixed or next_b_fixed)):
             return 100
         reward += 0.5
@@ -133,7 +133,7 @@ def get_reward(state, next_state):
 
 def perform_action(robot, action):
     robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
+    next_state = robot.get_state()
     return next_state
 
 

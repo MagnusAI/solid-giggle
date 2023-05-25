@@ -70,8 +70,8 @@ def get_reward(state, next_state):
 # Attach to the ground
 def phase_zero(state, next_state):
     global phase
-    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
     next_fixed = next_a_fixed or next_b_fixed
@@ -101,13 +101,13 @@ def phase_zero(state, next_state):
 # Find the wall
 def phase_one(state, next_state):
     global phase
-    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
 
     angled = arm_angle == 90
 
-    next_half_leveled = next_a_leveled or next_b_leveled
+    next_half_levelled = next_a_levelled or next_b_levelled
     next_fixed = next_a_fixed or next_b_fixed
     touching = a_touch or b_touch
     next_touching = next_a_touch or next_b_touch
@@ -129,11 +129,11 @@ def phase_one(state, next_state):
 # Lift module
 def phase_two(state, next_state):
     global phase
-    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     next_fixed = next_a_fixed or next_b_fixed
-    next_half_leveled = next_a_leveled or next_b_leveled
+    next_half_levelled = next_a_levelled or next_b_levelled
 
     touching = a_touch or b_touch
     next_touching = next_a_touch or next_b_touch
@@ -144,7 +144,7 @@ def phase_two(state, next_state):
     rising = a_distance < next_a_distance or b_distance < next_b_distance
 
     if (next_fixed):
-        if ((next_half_leveled and next_touching) or angled):
+        if ((next_half_levelled and next_touching) or angled):
             phase = 3
             return 10
         if (rising or tipping):
@@ -156,16 +156,16 @@ def phase_two(state, next_state):
 # Attach to the wall
 def phase_three(state, next_state):
     global phase
-    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, a_touch, b_touch, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_a_touch, next_b_touch, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
-    leveled = a_leveled and b_leveled
-    half_leveled = a_leveled or b_leveled
+    levelled = a_levelled and b_levelled
+    half_levelled = a_levelled or b_levelled
 
     next_fixed = next_a_fixed or next_b_fixed
-    next_leveled = next_a_leveled and next_b_leveled
-    next_half_leveled = next_a_leveled or next_b_leveled
+    next_levelled = next_a_levelled and next_b_levelled
+    next_half_levelled = next_a_levelled or next_b_levelled
 
     tipping = arm_angle < next_arm_angle
     untipping = arm_angle > next_arm_angle
@@ -177,10 +177,10 @@ def phase_three(state, next_state):
     touching = a_touch or b_touch
     next_touching = next_a_touch or next_b_touch
 
-    leveled_fixed = (a_leveled and a_fixed) or (b_leveled and b_fixed)
+    levelled_fixed = (a_levelled and a_fixed) or (b_levelled and b_fixed)
 
-    if (next_fixed and half_leveled):
-        if ((next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)):
+    if (next_fixed and half_levelled):
+        if ((next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)):
             return 100
         if (falling or untipping):
             return 1
@@ -191,7 +191,7 @@ def phase_three(state, next_state):
 
 def perform_action(robot, action):
     robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
+    next_state = robot.get_state()
     return next_state
 
 

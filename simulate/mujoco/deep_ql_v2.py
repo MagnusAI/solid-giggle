@@ -49,22 +49,22 @@ def load_network():
         pass
 
 def get_reward(state, next_state):
-    a_fixed, b_fixed, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
-    leveled = a_leveled and b_leveled
-    half_leveled = a_leveled or b_leveled
+    levelled = a_levelled and b_levelled
+    half_levelled = a_levelled or b_levelled
 
     next_fixed = next_a_fixed or next_b_fixed
-    next_leveled = next_a_leveled and next_b_leveled
-    next_half_leveled = next_a_leveled or next_b_leveled
+    next_levelled = next_a_levelled and next_b_levelled
+    next_half_levelled = next_a_levelled or next_b_levelled
 
     rising = a_distance < next_a_distance or b_distance < next_b_distance
     falling = a_distance > next_a_distance or b_distance > next_b_distance
 
     # Reward for fixing both modules on the wall
-    if (next_a_fixed and next_b_fixed and leveled):
+    if (next_a_fixed and next_b_fixed and levelled):
         return 100
     
     # Punishment for entering a state where both modules are unfixed
@@ -78,41 +78,41 @@ def get_reward(state, next_state):
     if (not fixed and next_fixed):
         return 1
 
-    # Reward for reaching half-leveled state
-    if (not half_leveled and next_half_leveled):
+    # Reward for reaching half-levelled state
+    if (not half_levelled and next_half_levelled):
         return 10
     
-    # Punishment for leaving half-leveled
-    if (half_leveled and not next_half_leveled):
+    # Punishment for leaving half-levelled
+    if (half_levelled and not next_half_levelled):
         return -10
 
     # Reward for fixing a module on the wall
-    if (fixed and next_half_leveled and ((next_a_fixed and not a_fixed) or (next_b_fixed and not b_fixed))):
+    if (fixed and next_half_levelled and ((next_a_fixed and not a_fixed) or (next_b_fixed and not b_fixed))):
         return 10
     
     # Punishment for releasing a module from the wall
-    if (((not next_a_fixed and a_fixed and a_leveled) or (not next_b_fixed and b_fixed and b_leveled))):
+    if (((not next_a_fixed and a_fixed and a_levelled) or (not next_b_fixed and b_fixed and b_levelled))):
         return -10
     
     # Reward for releasing a module from ground when th other has been fixed on the wall
-    if (a_fixed and b_fixed and half_leveled and ((not a_leveled and not next_a_fixed) or (not b_leveled and not next_b_fixed))):
+    if (a_fixed and b_fixed and half_levelled and ((not a_levelled and not next_a_fixed) or (not b_levelled and not next_b_fixed))):
         return 1
     
-    # Reward and punishement for entering and leaving the leveled state
-    if (not leveled and next_leveled):
+    # Reward and punishement for entering and leaving the levelled state
+    if (not levelled and next_levelled):
         return 10
-    elif ( leveled and not next_leveled):
+    elif ( levelled and not next_levelled):
         return -10
 
-    # Reward for moving closer to the wall with the unfixed modules while leveled
-    if (fixed and leveled and falling):
+    # Reward for moving closer to the wall with the unfixed modules while levelled
+    if (fixed and levelled and falling):
         return 1
     
     return -1
 
 def perform_action(robot, action):
     robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
+    next_state = robot.get_state()
     return next_state
 
 # Define the hyperparameters

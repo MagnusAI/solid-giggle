@@ -51,19 +51,19 @@ def load_network():
         pass
 
 def get_reward(state, next_state):
-    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_leveled, b_leveled = state
-    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_leveled, next_b_leveled = next_state
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed = a_fixed or b_fixed
     next_fixed = next_a_fixed or next_b_fixed
-    level_fixed = (a_fixed and a_leveled) or (b_fixed and b_leveled)
-    next_level_fixed = (next_a_fixed and next_a_leveled) or (next_b_fixed and next_b_leveled)
+    level_fixed = (a_fixed and a_levelled) or (b_fixed and b_levelled)
+    next_level_fixed = (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
     double_fixed = a_fixed and b_fixed
     next_double_fixed = next_a_fixed and next_b_fixed
-    next_double_level_fixed = next_a_fixed and next_b_fixed and next_a_leveled and next_b_leveled
+    next_double_level_fixed = next_a_fixed and next_b_fixed and next_a_levelled and next_b_levelled
     releasing = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed)
-    levelling = (not a_leveled and next_a_leveled) or (not b_leveled and next_b_leveled)
-    unlevelling = (a_leveled and not next_a_leveled) or (b_leveled and not next_b_leveled)
+    levelling = (not a_levelled and next_a_levelled) or (not b_levelled and next_b_levelled)
+    unlevelling = (a_levelled and not next_a_levelled) or (b_levelled and not next_b_levelled)
     a_rising = a_distance < next_a_distance
     b_rising = b_distance < next_b_distance
     a_falling = a_distance > next_a_distance
@@ -109,10 +109,10 @@ def get_reward(state, next_state):
     if (unlevelling):
         rewards -= 10
     
-    if (fixed and ((not a_leveled and (a_rising or tipping)) or (not b_leveled and (b_rising or tipping)))):
+    if (fixed and ((not a_levelled and (a_rising or tipping)) or (not b_levelled and (b_rising or tipping)))):
         rewards += 2
     
-    if (fixed and ((a_leveled and (a_falling or untipping)) or (b_leveled and (b_falling or untipping)))):
+    if (fixed and ((a_levelled and (a_falling or untipping)) or (b_levelled and (b_falling or untipping)))):
         rewards += 2
 
     return rewards
@@ -120,7 +120,7 @@ def get_reward(state, next_state):
 
 def perform_action(robot, action):
     robot.perform_action(action)
-    next_state = robot.read_state_from_sensors()
+    next_state = robot.get_state()
     return next_state
 
 
@@ -184,7 +184,7 @@ def controller(model, data):
         state_tensor = torch.tensor(
             [state], dtype=torch.float32, device=device)
         action = action_space[action_idx]
-        next_state = robot.read_state_from_sensors()
+        next_state = robot.get_state()
         next_state_tensor = torch.tensor(
                    [next_state], dtype=torch.float32, device=device)
         reward_tensor = torch.tensor(

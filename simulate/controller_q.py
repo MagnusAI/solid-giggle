@@ -117,8 +117,8 @@ def get_state():
     b_fixed = API.get_pressure("b") < -100
     lifted = is_lifted()
     rotated = is_rotated()
-    leveled = is_leveled()
-    state = (a_fixed, b_fixed, lifted, rotated, leveled)
+    levelled = is_levelled()
+    state = (a_fixed, b_fixed, lifted, rotated, levelled)
 
     return state
 
@@ -199,7 +199,7 @@ def is_rotated():
     return rot_90 or rot_270
 
 
-def is_leveled():
+def is_levelled():
     global API
     pos = round(API.get_position()[2], 2)
     return pos > 0.1

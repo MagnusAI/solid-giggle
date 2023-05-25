@@ -1,0 +1,9 @@
+Thu May 25 07:59:08 2023
+WARNING: mju_openResource: unknown file 'E:\Repositories\solid-giggle\controllers\dqn\../../../model/index.xml'
+
+Thu May 25 08:56:11 2023
+ERROR: Python exception raised
+
+Thu May 25 09:36:10 2023
+ERROR: Python exception raised
+

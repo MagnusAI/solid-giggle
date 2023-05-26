@@ -141,7 +141,14 @@ def perform_action(robot, action):
     next_state = robot.get_state()
     return next_state
 
-def stop():
+def stop(data):
+    # Log for Testing
+    with open("output/results.txt", "a") as f:
+        time = round(data.time,2)
+        state = robot.get_state()
+        success = state[0] and state[1] and state[5] and state[6]
+        result = {"Final state": state, "time": time, "success": "True" if success else "False"}
+        f.write(str(result) + "\n")
     sys.exit(0)
 
 
@@ -162,7 +169,7 @@ def controller(model, data):
 
         if (action == 'stop'):
             print("Time to complete:", round(data.time, 2), "seconds")
-            stop()
+            stop(data)
 
         next_state = perform_action(robot, action)
         sensor_delay = 1

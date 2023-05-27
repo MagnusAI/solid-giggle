@@ -1,0 +1,5 @@
+{'Final state': (True, True, 75, 0, 6, False, True), 'time': 70.0, 'success': 'False'}
+{'Final state': (True, True, 0, 2, 0, True, True), 'time': 1.82, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 1.85, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 2.31, 'success': 'True'}
+{'Final state': (True, True, 15, 999, 0, True, True), 'time': 1.85, 'success': 'True'}

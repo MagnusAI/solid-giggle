@@ -1,0 +1,3 @@
+{'Final state': (True, True, 45, 0, 0, False, True), 'time': 45.0, 'success': 'False'}
+{'Final state': (True, True, 30, 8, 0, False, True), 'time': 45.0, 'success': 'False'}
+{'Final state': (True, True, 30, 4, 2, False, True), 'time': 45.0, 'success': 'False'}

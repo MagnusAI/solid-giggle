@@ -1,0 +1,10 @@
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 4.45, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 5.52, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 5.41, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 5.46, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 5.42, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 5.71, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 6.85, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 5.47, 'success': 'True'}
+{'Final state': (True, True, 0, 4, 0, True, True), 'time': 6.73, 'success': 'True'}
+{'Final state': (True, True, 0, 0, 0, True, True), 'time': 5.42, 'success': 'True'}

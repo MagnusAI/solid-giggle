@@ -1,0 +1,10 @@
+{'Final state': (True, False, 90, 0, 999, False, True), 'time': 31.96, 'success': 'False'}
+{'Final state': (True, False, 75, 0, 999, False, True), 'time': 31.78, 'success': 'False'}
+{'Final state': (True, False, 75, 12, 0, False, True), 'time': 32.65, 'success': 'False'}
+{'Final state': (True, False, 75, 0, 0, False, True), 'time': 32.54, 'success': 'False'}
+{'Final state': (True, False, 75, 4, 0, False, True), 'time': 32.41, 'success': 'False'}
+{'Final state': (True, False, 75, 4, 999, False, True), 'time': 32.03, 'success': 'False'}
+{'Final state': (True, False, 90, 2, 0, False, True), 'time': 33.77, 'success': 'False'}
+{'Final state': (True, False, 75, 0, 999, False, True), 'time': 32.12, 'success': 'False'}
+{'Final state': (True, False, 75, 2, 999, False, True), 'time': 32.68, 'success': 'False'}
+{'Final state': (True, False, 75, 4, 999, False, True), 'time': 32.08, 'success': 'False'}

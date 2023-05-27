@@ -49,11 +49,11 @@ loss_fn = nn.MSELoss()
 learning_rate = 0.01
 gamma = 0.95  # Discount factor
 epsilon = 0.75  # Exploration rate (epsilon-greedy)
-epsilon_decay = .999
+epsilon_decay = 0.999
 target_update = 10
 steps_done = 0
 
-network_name = "q_network.pth"
+network_name = "q_network_0.pth"
 current_state = None
 action_idx = None
 episode_score = 0
@@ -131,14 +131,15 @@ def get_reward(state, next_state):
     if next_double_level_fixed: return 500
     if not fixed and (next_a_distance > 30 and next_b_distance > 30): return -100
     if not fixed and next_fixed: reward = 1
-    if (not fixed or next_a_fixed) and (a_rising or b_rising): reward = -.5
+    if (not fixed or not next_fixed) and (a_rising or b_rising): reward = -.5
     if not fixed and ((a_falling and not b_rising) or (b_falling and not a_rising)): reward += .2
     if fixed and levelling: reward += .2
     if fixed and unlevelling: reward = -.5
+    if fixed and arm_angle == 90 and (a_falling or b_falling): reward += .2
     if fixed and ((a_levelled and a_rising) or (b_levelled and b_rising)): reward += .1
     if fixed and ((not a_levelled and a_rising) or (not b_levelled and b_rising)): reward += .2
     if fixed and ((a_levelled and a_falling) or (b_levelled and b_falling)): reward += .1
-    if next_double_fixed and next_level_fixed: reward = .5
+    if next_double_fixed and next_level_fixed: reward = 1
     if double_fixed and releasing: reward = .5
     if next_double_fixed and not next_level_fixed: reward = -.5
     if not level_fixed and next_level_fixed: reward = 1
@@ -196,7 +197,7 @@ data = mj.MjData(model)
 mj.set_mjcb_control(robot_controller)
 
 glfw.init()
-window = glfw.create_window(600, 450, "Lappa Rule-based", None, None)
+window = glfw.create_window(600, 450, "Lappa Deep-Q", None, None)
 glfw.make_context_current(window)
 
 # Set VSync to 1, which means that the window's buffer will be swapped with the front buffer at most once per frame.

@@ -2,11 +2,12 @@ import subprocess
 import shutil
 import os
 
-for j in range(10):
-    angle = -50 + (j * 10)
+for j in range(1):
+    angle = 20 + (j * 10)
     for i in range(8):
-        distance = 0.15 + (i * 0.05)
+        distance = 0.35 + (i * 0.05)
 
+        print(f'Distance {distance}, Angle {angle}')
         subprocess.call(['python', f'scripts/build/main_angle.py', f'{distance}', f'{angle}'])
 
         # Clear results file
@@ -16,7 +17,7 @@ for j in range(10):
         # Run the simulation X times
         for i in range(10):
             print(f'Running simulation {i+1}')
-            subprocess.run(['python', f'controllers/open-loop/main.py'])
+            subprocess.run(['python', f'controllers/rule/main.py'])
 
             # Copy the results to a new file to avoid overwriting
             filename = f'output/rule/angle/ruled_based_angle_{round(angle)}_{round(distance*100, 0)}.txt'

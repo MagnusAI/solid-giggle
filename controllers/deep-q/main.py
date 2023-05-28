@@ -48,18 +48,19 @@ loss_fn = nn.MSELoss()
 # Define the hyperparameters
 learning_rate = 0.01
 gamma = 0.95  # Discount factor
-epsilon = 0.75  # Exploration rate (epsilon-greedy)
+epsilon = 0.85  # Exploration rate (epsilon-greedy)
 epsilon_decay = 0.999
 target_update = 10
 steps_done = 0
 
-network_name = "q_network_0.pth"
+network_name = "q_network_1.pth"
 current_state = None
 action_idx = None
 episode_score = 0
 rewards = []
 latest_reward = None
 stale_count = 0
+stage = 1
 
 def controller(model, data):
     global robot, action_idx, episode_score, rewards, current_state, stale_count, latest_reward
@@ -116,37 +117,150 @@ def perform_action(robot, action):
     return robot.get_state()
 
 def get_reward(state, next_state):
+    global stage
+
+    reward = 0
+    if (stage == 1):
+        reward = stage_one(state, next_state)
+    elif (stage == 2):
+        reward = stage_two(state, next_state)
+    elif (stage == 3):
+        reward = stage_three(state, next_state)
+    elif (stage == 4):
+        reward = stage_four(state, next_state)
+    elif (stage == 5):
+        reward = stage_five(state, next_state)
+    elif (stage == 6):
+        reward = stage_six(state, next_state)
+    return reward
+    
+
+def stage_one(state, next_state):
+    global stage
     a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
     next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
 
     fixed, next_fixed = a_fixed or b_fixed, next_a_fixed or next_b_fixed
-    level_fixed, next_level_fixed = (a_fixed and a_levelled) or (b_fixed and b_levelled), (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
-    double_fixed, next_double_fixed, next_double_level_fixed = a_fixed and b_fixed, next_a_fixed and next_b_fixed, next_a_fixed and next_b_fixed and next_a_levelled and next_b_levelled
-    releasing, levelling, unlevelling = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed), (not a_levelled and next_a_levelled) or (not b_levelled and next_b_levelled), (a_levelled and not next_a_levelled) or (b_levelled and not next_b_levelled)
-    a_rising, b_rising, a_falling, b_falling = a_distance < next_a_distance, b_distance < next_b_distance, a_distance > next_a_distance, b_distance > next_b_distance
-    tipping, untipping = arm_angle < next_arm_angle, arm_angle > next_arm_angle
+    a_falling, a_rising, b_falling, b_rising = a_distance > next_a_distance, a_distance < next_a_distance, b_distance > next_b_distance, b_distance < next_b_distance
+    reward = -.1
+    if not fixed and next_fixed: 
+        reward = 100
+        stage = 2
+    if a_falling or b_falling: reward = .5
+    if a_rising or b_rising: reward = -.5
+    return reward
+
+def stage_two(state,next_state):
+    global stage
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
+
+    next_fixed = next_a_fixed or next_b_fixed
+    a_rising, b_rising = a_distance < next_a_distance, b_distance < next_b_distance
 
     reward = -.1
 
-    if next_double_level_fixed: return 500
-    if not fixed and (next_a_distance > 30 and next_b_distance > 30): return -100
-    if not fixed and next_fixed: reward = 1
-    if (not fixed or not next_fixed) and (a_rising or b_rising): reward = -.5
-    if not fixed and ((a_falling and not b_rising) or (b_falling and not a_rising)): reward += .2
-    if fixed and levelling: reward += .2
-    if fixed and unlevelling: reward = -.5
-    if fixed and arm_angle == 90 and (a_falling or b_falling): reward += .2
-    if fixed and ((a_levelled and a_rising) or (b_levelled and b_rising)): reward += .1
-    if fixed and ((not a_levelled and a_rising) or (not b_levelled and b_rising)): reward += .2
-    if fixed and ((a_levelled and a_falling) or (b_levelled and b_falling)): reward += .1
-    if next_double_fixed and next_level_fixed: reward = 1
-    if double_fixed and releasing: reward = .5
-    if next_double_fixed and not next_level_fixed: reward = -.5
-    if not level_fixed and next_level_fixed: reward = 1
-    if (fixed and not next_fixed): reward = -1
-    if level_fixed and not next_level_fixed: reward = -100
-
+    if (a_rising or b_rising):
+        reward = .5
+    if (next_arm_angle == 90):
+        reward = 1
+        stage = 3
+    if (not next_fixed):
+        reward = -100
+        stage = 1
     return reward
+
+def stage_three(state, next_state):
+    global stage
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
+
+    next_fixed = next_a_fixed or next_b_fixed
+    a_falling, b_falling = a_distance > next_a_distance, b_distance > next_b_distance
+    a_rising, b_rising = a_distance < next_a_distance, b_distance < next_b_distance
+    levelled, next_levelled = a_levelled and b_levelled, next_a_levelled and next_b_levelled
+
+    reward = -.1
+    if (arm_angle == 90 and (a_falling or b_falling)):
+        reward = .5
+    if (next_a_distance < 20 and next_b_distance < 20 and next_levelled):
+        reward = 100
+        stage = 4
+    if (a_rising or b_rising):
+        reward = -.5
+    if (not next_fixed):
+        reward = -100
+        stage = 1
+    return reward
+        
+def stage_four(state, next_state):
+    global stage
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
+
+    next_fixed = next_a_fixed or next_b_fixed
+    a_falling, b_falling = a_distance > next_a_distance, b_distance > next_b_distance
+    double_fixed, next_double_fixed = a_fixed and b_fixed, next_a_fixed and next_b_fixed
+    levelled, next_levelled = a_levelled and b_levelled, next_a_levelled and next_b_levelled
+
+    reward = -.1
+    if ((a_falling or b_falling) and next_levelled):
+        reward = .5
+    if (next_double_fixed and next_levelled):
+        reward = 100
+        stage = 5
+    if (not next_fixed):
+        reward = -100
+        stage = 1
+    return reward
+    
+def stage_five(state, next_state):
+    global stage
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
+
+    next_fixed, next_double_fixed = next_a_fixed or next_b_fixed, next_a_fixed and next_b_fixed
+    releasing = (a_fixed and not next_a_fixed) or (b_fixed and not next_b_fixed)
+    levelled_fixed, next_levelled_fixed = (a_fixed and a_levelled) or (b_fixed and b_levelled), (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
+    rising = (a_distance < next_a_distance) or (b_distance < next_b_distance)
+
+    reward = -.1
+    if (releasing and (next_a_levelled or next_b_levelled)):
+        reward = .5
+    if (levelled_fixed and next_levelled_fixed and rising):
+        reward = .5
+    if (next_levelled_fixed and (next_a_levelled and next_b_levelled)):
+        reward = 100
+        stage = 6
+    if (not next_fixed):
+        reward = -100
+        stage = 1
+    return reward
+
+def stage_six(state, next_state):
+    global stage
+    a_fixed, b_fixed, arm_angle, a_distance, b_distance, a_levelled, b_levelled = state
+    next_a_fixed, next_b_fixed, next_arm_angle, next_a_distance, next_b_distance, next_a_levelled, next_b_levelled = next_state
+
+    next_fixed, next_double_fixed = next_a_fixed or next_b_fixed, next_a_fixed and next_b_fixed
+    levelled, next_levelled = a_levelled and b_levelled, next_a_levelled and next_b_levelled
+    falling = (a_distance > next_a_distance) or (b_distance > next_b_distance)
+    levelled_fixed, next_levelled_fixed = (a_fixed and a_levelled) or (b_fixed and b_levelled), (next_a_fixed and next_a_levelled) or (next_b_fixed and next_b_levelled)
+
+    reward = -.1
+    if (next_levelled_fixed and falling):
+        reward = .5
+    if (next_double_fixed and next_levelled):
+        reward = 500
+        stage = 7
+    if (not next_levelled):
+        reward = -1
+        stage = 5
+    if (not next_fixed):
+        reward = -100
+        stage = 1
+    return reward
+
 
 def update_target_network(target_network, q_network):
     global steps_done, target_update
@@ -217,7 +331,7 @@ target_fps = 60.0
 
 # Initialize counter
 episode_counter = 0
-max_episodes = 999
+max_episodes = 2000
 episode_time_limit = 20
 
 # Function to reset the environment (you may need to adjust this depending on your needs)
@@ -235,7 +349,7 @@ def is_terminal_state(data):
     global robot, episode_counter, episode_time_limit, latest_reward
     a_fixed, b_fixed, arm_angle, a_range, b_range, a_levelled, b_levelled = robot.get_state() 
 
-    terminal_condition = ((not a_fixed and not b_fixed) and (a_range > 30 and b_range > 30)) or (latest_reward == -100)
+    terminal_condition = ((not a_fixed and not b_fixed) and (a_range > 30 and b_range > 30))
     goal_condition = ((a_fixed and b_fixed) and (a_levelled and b_levelled)) or (latest_reward == 500)
     time_limit = real_time(data.time) > episode_time_limit
     return goal_condition or terminal_condition or time_limit

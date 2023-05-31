@@ -196,7 +196,7 @@ def save_network(q_network, network_name):
     torch.save(q_network.state_dict(), network_name)
     print('Saved', network_name, ' to disk')
 
-robot_path = '../../model/index.xml'
+robot_path = '../../model/index_angle.xml'
 robot_controller = controller
 
 # Define the path to the XML model file.

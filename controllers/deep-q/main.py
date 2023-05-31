@@ -10,7 +10,7 @@ from dqn import DQN
 import numpy as np
 
 # Open/create file for storing Q-value distributions
-q_values_file = open('q_value_distributions_5_sec.txt', 'w')
+q_values_file = open('q_value_distributions.txt', 'w')
 
 # Define the action space
 action_space = ['lift_a', 'lift_b', 'lower_a', 'lower_b',
@@ -56,7 +56,7 @@ epsilon_decay = 0.999
 target_update = 10
 steps_done = 0
 
-network_name = "q_network_5_seconds.pth"
+network_name = "q_network.pth"
 current_state = None
 action_idx = None
 episode_score = 0
@@ -196,7 +196,7 @@ def save_network(q_network, network_name):
     torch.save(q_network.state_dict(), network_name)
     print('Saved', network_name, ' to disk')
 
-robot_path = '../../model/index.xml'
+robot_path = '../../model/index_angle.xml'
 robot_controller = controller
 
 # Define the path to the XML model file.

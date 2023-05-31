@@ -1,7 +1,0 @@
-<!-- The Lappa robot -->
-<mujoco>
-	<!-- set options to simulate underwater environment -->
-	<option gravity="0 0 0" density="1025" viscosity=" 0.00125" />
-	<include file="walls/curved_wall.xml" />
-	<include file="ground/floor.xml" />
-</mujoco>

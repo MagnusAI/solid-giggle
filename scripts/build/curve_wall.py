@@ -15,7 +15,7 @@ else:
 
 filename = os.path.basename(__file__)
 
-radius = curve_arg  # Modify this value to change the curvature of the wall
+radius = curve_arg  # Modify this value to change the curvature of the wall (the unit is meters)
 box_width = .025 * 1.5 # Modify this value to change the width of the boxes
 angle_step = 180 / 40  # Modify this value to change the density of the boxes along the curve
 

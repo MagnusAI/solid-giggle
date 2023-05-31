@@ -10,7 +10,7 @@ from dqn import DQN
 import numpy as np
 
 # Open/create file for storing Q-value distributions
-q_values_file = open('q_value_distributions.txt', 'w')
+q_values_file = open('q_value_distributions_5_sec.txt', 'w')
 
 # Define the action space
 action_space = ['lift_a', 'lift_b', 'lower_a', 'lower_b',
@@ -51,12 +51,12 @@ loss_fn = nn.MSELoss()
 # Define the hyperparameters
 learning_rate = 0.01
 gamma = 0.95  # Discount factor
-epsilon = 0.85  # Exploration rate (epsilon-greedy)
+epsilon = 0.0  # Exploration rate (epsilon-greedy)
 epsilon_decay = 0.999
 target_update = 10
 steps_done = 0
 
-network_name = "q_network_2.pth"
+network_name = "q_network_5_seconds.pth"
 current_state = None
 action_idx = None
 episode_score = 0
@@ -67,7 +67,7 @@ stale_count = 0
 
 episode_counter = 0
 max_episodes = 1000
-episode_time_limit = 20
+episode_time_limit = 5
 
 def controller(model, data):
     global robot, action_idx, episode_score, rewards, current_state, stale_count, latest_reward
@@ -137,7 +137,7 @@ def get_reward(state, next_state):
     reward = -.1
 
     if next_double_level_fixed: return 500
-    if not fixed and (next_a_distance > 30 and next_b_distance > 30): return -100
+    if not fixed and (next_a_distance > 30 and next_b_distance > 30): return -1
     if not fixed and next_fixed: reward = 1
     if (not fixed or not next_fixed) and (a_rising or b_rising): reward = -.5
     if not fixed and ((a_falling and not b_rising) or (b_falling and not a_rising)): reward += .2
@@ -147,12 +147,12 @@ def get_reward(state, next_state):
     if fixed and ((a_levelled and a_rising) or (b_levelled and b_rising)): reward += .1
     if fixed and ((not a_levelled and a_rising) or (not b_levelled and b_rising)): reward += .2
     if fixed and ((a_levelled and a_falling) or (b_levelled and b_falling)): reward += .1
-    if next_double_fixed and next_level_fixed: reward = 1
+    if (not double_fixed and not level_fixed) and (next_double_fixed and next_level_fixed): reward = 1
     if double_fixed and releasing: reward = .5
     if next_double_fixed and not next_level_fixed: reward = -.5
-    if not level_fixed and next_level_fixed: reward = 1
+    if not level_fixed and next_level_fixed: reward = 10
     if (fixed and not next_fixed): reward = -1
-    if level_fixed and not next_level_fixed: reward = -100
+    if level_fixed and not next_level_fixed: reward = -10
 
     return reward
     

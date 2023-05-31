@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load data
-data = pd.read_csv('q_value_distributions.txt', names=['current', 'expected'])
+data = pd.read_csv('q_value_distributions_5_sec_100.txt', names=['current', 'expected'])
 
 # Scatter plot
 plt.scatter(data['current'], data['expected'])
